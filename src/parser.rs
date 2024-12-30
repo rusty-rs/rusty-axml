@@ -10,7 +10,9 @@ use std::cell::RefCell;
 use std::io::{
     Error,
     Cursor,
+    Write,
 };
+use std::fs::File;
 
 use byteorder::{
     LittleEndian,
@@ -18,7 +20,7 @@ use byteorder::{
 };
 
 use quick_xml::Writer;
-use quick_xml::events::{Event, BytesEnd, BytesStart};
+use quick_xml::events::{BytesDecl, BytesEnd, BytesStart, Event};
 use quick_xml::events::attributes::Attribute;
 use quick_xml::name::QName;
 
@@ -37,6 +39,54 @@ pub struct XmlElement {
     pub attributes: HashMap<String, String>,
     /// Vector of children of the XML element
     pub children: Vec<Rc<RefCell<XmlElement>>>,
+}
+
+impl XmlElement {
+    pub fn write_to_file(&self, file: &mut File) -> Result<(), Error> {
+        let mut writer = Writer::new_with_indent(Vec::new(), b' ', 4);
+
+        writer
+            .write_event(Event::Decl(BytesDecl::new("1.0", Some("utf-8"), None)))
+            .unwrap();
+
+        self.write_element(&mut writer).unwrap();
+
+        file.write_all(&writer.into_inner()[..])
+            .expect("Couldn't write to file");
+
+        Ok(())
+    }
+
+    fn write_element<W: Write>(&self, writer: &mut Writer<W>) -> Result<(), Error> {
+        let mut element = writer.create_element(&self.element_type);
+
+        element = if self.attributes.is_empty() {
+            element
+        } else {
+            element.with_attributes(
+                self.attributes
+                    .iter()
+                    .map(|(k, v)| (k.as_str(), v.as_str()))
+                    .collect::<Vec<(&str, &str)>>(),
+            )
+        };
+
+        if self.children.is_empty() {
+            element.write_empty().unwrap();
+        } else {
+            element
+                .write_inner_content(|writer| -> Result<(), quick_xml::Error> {
+                    for child in self.children.iter() {
+                        child.as_ref().borrow().write_element(writer).unwrap();
+                    }
+
+                    Ok(())
+                })
+                .unwrap();
+        }
+
+        Ok(())
+    }
 }
 
 /// Parse the start of a namepace
