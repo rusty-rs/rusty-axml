@@ -1,3 +1,7 @@
+//! Command line args
+//!
+//! This is only used in the binary crate.
+
 use std::path::PathBuf;
 use clap::Parser;
 

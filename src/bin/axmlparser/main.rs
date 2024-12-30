@@ -12,7 +12,7 @@ fn main() {
     let arg_path = args.get_arg_path();
 
     // Create cursor over input file contents
-    let mut axml_cursor = create_cursor_from_apk(&arg_path);
+    let axml_cursor = create_cursor_from_apk(&arg_path);
 
     // Parse the XML
     let elements = parser::parse_xml(axml_cursor);
