@@ -72,4 +72,8 @@ impl Args {
             ArgType::Arsc => { self.target.res.clone().unwrap() },
         }
     }
+
+    pub fn get_output_path(&self) -> Option<PathBuf> {
+        self.output.clone()
+    }
 }

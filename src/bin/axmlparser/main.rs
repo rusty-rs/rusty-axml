@@ -1,6 +1,7 @@
 #![cfg(feature = "cli")]
 pub mod cli;
 
+use std::fs::File;
 use rusty_axml::{
     create_cursor_from_apk,
     create_cursor_from_axml,
@@ -26,8 +27,12 @@ fn main() {
 
     // Parse the XML
     let elements = parser::parse_xml(axml_cursor);
-    println!("{elements:?}");
 
-    // TODO: convert into actual AXML and offer
-    // the possibility to write it to a file
+    // Write to file if `args::output` is not `None`
+    if let Some(opath) = args.get_output_path() {
+        let mut ofile = File::create(opath)
+            .expect("Error: cannot open file {opath}");
+        elements.borrow().write_to_file(&mut ofile)
+            .expect("Error: cannot write to file {opath}");
+    };
 }
