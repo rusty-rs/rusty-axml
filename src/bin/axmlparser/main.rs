@@ -29,10 +29,17 @@ fn main() {
     let elements = parser::parse_xml(axml_cursor);
 
     // Write to file if `args::output` is not `None`
-    if let Some(opath) = args.get_output_path() {
-        let mut ofile = File::create(opath)
-            .expect("Error: cannot open file {opath}");
-        elements.borrow().write_to_file(&mut ofile)
-            .expect("Error: cannot write to file {opath}");
-    };
+    match args.get_output_path() {
+        Some(opath) => {
+            let mut ofile = File::create(opath)
+                .expect("Error: cannot open file {opath}");
+            elements.borrow().write_to_file(&mut ofile)
+                .expect("Error: cannot write to file {opath}");
+        },
+        None => {
+            if let Ok(str_xml) = elements.borrow().to_string() {
+                println!("{str_xml}");
+            };
+        }
+    }
 }
