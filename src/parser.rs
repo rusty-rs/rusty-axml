@@ -43,6 +43,17 @@ pub struct XmlElement {
 
 impl XmlElement {
     pub fn write_to_file(&self, file: &mut File) -> Result<(), Error> {
+        match self.to_string() {
+            Ok(str_xml) => {
+                file.write_all(str_xml.as_bytes())
+                    .expect("Couldn't write to file");
+                Ok(())
+            },
+            Err(err) => { Err(err) }
+        }
+    }
+
+    pub fn to_string(&self) -> Result<String, Error> {
         let mut writer = Writer::new_with_indent(Vec::new(), b' ', 4);
 
         writer
@@ -51,10 +62,11 @@ impl XmlElement {
 
         self.write_element(&mut writer).unwrap();
 
-        file.write_all(&writer.into_inner()[..])
-            .expect("Couldn't write to file");
+        let result = std::str::from_utf8(&writer.into_inner())
+            .expect("Failed to convert a slice of bytes to a string slice")
+            .to_string();
 
-        Ok(())
+        Ok(result)
     }
 
     fn write_element<W: Write>(&self, writer: &mut Writer<W>) -> Result<(), Error> {
