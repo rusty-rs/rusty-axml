@@ -120,6 +120,27 @@ pub fn parse_from_string(axml_str: &str) -> Rc<RefCell<XmlElement>> {
     parser::parse_xml(axml_cursor)
 }
 
+/// Parses the AXML from a generic reader
+///
+/// This is a more generic version of [`parse_from_string`]. This function will
+/// read and attempt to parse AXML from any type that implements the [`Read`] trait.
+///
+/// [`parse_from_string`]: fn.parse_from_string.html
+/// [`Read`]: https://doc.rust-lang.org/std/io/trait.Read.html
+pub fn parse_from_reader<R>(mut reader: R) -> Rc<RefCell<XmlElement>>
+where
+    R: Read,
+{
+    // TODO: properly handle errors while reading
+    let mut axml_vec = Vec::<u8>::new();
+    if let Err(err) = reader.read_to_end(&mut axml_vec) {
+        panic!("Error: cannot read bytes from reader: {err}");
+    }
+
+    let axml_cursor = Cursor::new(axml_vec);
+    parser::parse_xml(axml_cursor)
+}
+
 /// Use BFS tree traversal to get all element of a given type
 fn find_elements_by_type(parsed_xml: &Rc<RefCell<XmlElement>>, element_type: &str) -> Vec<Rc<RefCell<XmlElement>>> {
     let mut result = Vec::new();
