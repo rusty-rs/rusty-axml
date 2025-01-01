@@ -110,6 +110,16 @@ pub fn parse_from_cursor(axml_cursor: Cursor<Vec<u8>>) -> Rc<RefCell<XmlElement>
     parser::parse_xml(axml_cursor)
 }
 
+/// Parses the AXML file from a string.
+///
+/// Given a string that represents an AXML document, parses the string into XML.
+/// This function will return an `XmlElement` which represents the root of the
+/// parsed XML document.
+pub fn parse_from_string(axml_str: &str) -> Rc<RefCell<XmlElement>> {
+    let axml_cursor = Cursor::new(Vec::from(axml_str.as_bytes()));
+    parser::parse_xml(axml_cursor)
+}
+
 /// Use BFS tree traversal to get all element of a given type
 fn find_elements_by_type(parsed_xml: &Rc<RefCell<XmlElement>>, element_type: &str) -> Vec<Rc<RefCell<XmlElement>>> {
     let mut result = Vec::new();
