@@ -98,7 +98,46 @@ pub fn create_cursor_from_axml(file_path: &str) -> Cursor<Vec<u8>> {
     Cursor::new(axml_cursor)
 }
 
-pub fn get_manifest_contents(axml_cursor: Cursor<Vec<u8>>) -> Rc<RefCell<XmlElement>> {
+/// Parses the AXML file from a cursor.
+///
+/// This function will return an `XmlElement` which represents the root of the
+/// parsed XML document. Note that the Cursor must first be created using either
+/// [`create_cursor_from_axml`] or [`create_cursor_from_apk`].
+///
+/// [`create_cursor_from_axml`]: fn.create_cursor_from_axml.html
+/// [`create_cursor_from_apk`]: fn.create_cursor_from_apk.html
+pub fn parse_from_cursor(axml_cursor: Cursor<Vec<u8>>) -> Rc<RefCell<XmlElement>> {
+    parser::parse_xml(axml_cursor)
+}
+
+/// Parses the AXML file from a string.
+///
+/// Given a string that represents an AXML document, parses the string into XML.
+/// This function will return an `XmlElement` which represents the root of the
+/// parsed XML document.
+pub fn parse_from_string(axml_str: &str) -> Rc<RefCell<XmlElement>> {
+    let axml_cursor = Cursor::new(Vec::from(axml_str.as_bytes()));
+    parser::parse_xml(axml_cursor)
+}
+
+/// Parses the AXML from a generic reader
+///
+/// This is a more generic version of [`parse_from_string`]. This function will
+/// read and attempt to parse AXML from any type that implements the [`Read`] trait.
+///
+/// [`parse_from_string`]: fn.parse_from_string.html
+/// [`Read`]: https://doc.rust-lang.org/std/io/trait.Read.html
+pub fn parse_from_reader<R>(mut reader: R) -> Rc<RefCell<XmlElement>>
+where
+    R: Read,
+{
+    // TODO: properly handle errors while reading
+    let mut axml_vec = Vec::<u8>::new();
+    if let Err(err) = reader.read_to_end(&mut axml_vec) {
+        panic!("Error: cannot read bytes from reader: {err}");
+    }
+
+    let axml_cursor = Cursor::new(axml_vec);
     parser::parse_xml(axml_cursor)
 }
 

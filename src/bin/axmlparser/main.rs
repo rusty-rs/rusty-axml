@@ -6,7 +6,6 @@ use rusty_axml::{
     create_cursor_from_apk,
     create_cursor_from_axml,
 };
-use rusty_axml::parser;
 
 use crate::cli::ArgType;
 
@@ -26,7 +25,7 @@ fn main() {
     };
 
     // Parse the XML
-    let elements = parser::parse_xml(axml_cursor);
+    let elements = rusty_axml::parse_from_cursor(axml_cursor);
 
     // Write to file if `args::output` is not `None`
     match args.get_output_path() {
