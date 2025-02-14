@@ -1,6 +1,6 @@
 #![allow(dead_code)]
 
-use crate::data_value_type::DataValueType;
+use crate::chunks::data_value_type::DataValueType;
 
 use std::io::{
     Error,

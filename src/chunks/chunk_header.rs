@@ -14,7 +14,7 @@ use byteorder::{
     LittleEndian,
     ReadBytesExt,
 };
-use crate::chunk_types::ChunkType;
+use crate::chunks::chunk_types::ChunkType;
 
 /// Header that appears at the beginning of every chunk
 #[derive(Debug)]

@@ -2,13 +2,16 @@
 
 //! AXML resource maps
 
-use crate::chunk_header::ChunkHeader;
-use crate::chunk_types::ChunkType;
+use crate::chunks::{
+    chunk_header::ChunkHeader,
+    chunk_types::ChunkType
+};
 
 use std::io::{
     Error,
     Cursor,
 };
+
 use byteorder::{
     LittleEndian,
     ReadBytesExt

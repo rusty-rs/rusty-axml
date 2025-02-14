@@ -1,13 +1,16 @@
 #![allow(dead_code)]
 
-use crate::chunk_header::ChunkHeader;
-use crate::string_pool::StringPool;
-use crate::chunk_types::ChunkType;
+use crate::chunks::{
+    chunk_header::ChunkHeader,
+    string_pool::StringPool,
+    chunk_types::ChunkType
+};
 
 use std::io::{
     Error,
     Cursor,
 };
+
 use byteorder::{
     LittleEndian,
     ReadBytesExt

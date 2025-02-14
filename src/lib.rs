@@ -1,11 +1,5 @@
 pub mod parser;
-pub mod chunk_types;
-pub mod chunk_header;
-pub mod string_pool;
-pub mod resource_map;
-pub mod data_value_type;
-pub mod res_value;
-pub mod res_table;
+pub mod chunks;
 
 use std::{
     fs,
@@ -18,11 +12,11 @@ use std::io::{
 use std::rc::Rc;
 use std::cell::RefCell;
 
-use crate::resource_map::ResourceMap;
-use crate::res_table::{
-    ResTable
+use crate::chunks::{
+    resource_map::ResourceMap,
+    res_table::ResTable,
+    string_pool::StringPool,
 };
-use crate::string_pool::StringPool;
 use crate::parser::XmlElement;
 
 /// Representation of an app's manifest contents

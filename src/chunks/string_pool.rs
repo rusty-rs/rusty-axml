@@ -7,13 +7,16 @@
 //! the size of the binary XML as there is no duplication of strings
 //! anymore.
 
-use crate::chunk_header::ChunkHeader;
-use crate::chunk_types::ChunkType;
+use crate::chunks::{
+    chunk_header::ChunkHeader,
+    chunk_types::ChunkType,
+};
 
 use std::io::{
     Read,
     Cursor,
 };
+
 use byteorder::{
     LittleEndian,
     ReadBytesExt

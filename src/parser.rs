@@ -24,11 +24,18 @@ use quick_xml::events::{BytesDecl, BytesEnd, BytesStart, Event};
 use quick_xml::events::attributes::Attribute;
 use quick_xml::name::QName;
 
-use crate::chunk_types::ChunkType;
-use crate::chunk_header::ChunkHeader;
-use crate::data_value_type::DataValueType;
-use crate::res_value::ResValue;
-use crate::{ ResourceMap, StringPool, ResTable };
+use crate::{
+    ResourceMap,
+    StringPool,
+    ResTable
+};
+
+use crate::chunks::{
+    chunk_types::ChunkType,
+    chunk_header::ChunkHeader,
+    data_value_type::DataValueType,
+    res_value::ResValue,
+};
 
 /// Representation of an XML element with optional children
 #[derive(Debug)]
