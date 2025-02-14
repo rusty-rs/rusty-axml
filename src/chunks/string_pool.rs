@@ -44,8 +44,6 @@ use byteorder::{
 /// of indices into the string table is another array of indices into
 /// a style table starting at `styles_start`. Each entry in the style
 /// table is an array of `string_pool_span` structures.
-///
-/// TODO: implement the `string_pool_span` struct
 #[derive(Debug)]
 pub struct StringPool {
     /// Chunk header
@@ -81,6 +79,9 @@ pub struct StringPool {
 
     /// The strings from the pool
     strings: Vec<String>,
+
+    /// The styles from the pool
+    styles: Vec<StringPoolSpan>,
 }
 
 impl StringPool {
@@ -163,7 +164,21 @@ impl StringPool {
             }
         }
 
-        let strings = global_strings.to_vec();
+        let mut styles = Vec::new();
+        for offset in styles_offsets.iter() {
+            let current_start = (initial_offset + strings_start + offset) as u64;
+            axml_buff.set_position(current_start);
+
+            let string_pool_ref = StringPoolRef { index: axml_buff.read_u32::<LittleEndian>().unwrap() };
+            let first_char = axml_buff.read_u32::<LittleEndian>().unwrap();
+            let last_char = axml_buff.read_u32::<LittleEndian>().unwrap();
+
+            styles.push(StringPoolSpan {
+                name: string_pool_ref,
+                first_char,
+                last_char
+            });
+        }
 
         StringPool {
             header,
@@ -175,9 +190,39 @@ impl StringPool {
             styles_start,
             strings_offsets,
             styles_offsets,
-            strings
+            strings: global_strings.to_vec(),
+            styles
         }
     }
+}
+
+/// Reference to a string in a string pool.
+#[derive(Debug)]
+struct StringPoolRef {
+    /// Index into the string pool table (uint32_t-offset from the indices
+    /// immediately after ResStringPool_header) at which to find the location
+    /// of the string data in the pool.
+    index: u32,
+}
+
+/// String pool span
+///
+/// This structure defines a span of style information associated
+/// with a string in the pool.
+#[derive(Debug)]
+struct StringPoolSpan {
+    /// Name of the span
+    ///
+    /// This is the name of the XML tag that defined it.
+    /// There is a special value END (0xFFFFFFFF) that indicates the
+    /// end of an array of spans.
+    name: StringPoolRef,
+
+    /// The first of the characters in the string that this span applies to
+    first_char: u32,
+
+    /// The last of the characters in the string that this span applies to
+    last_char: u32,
 }
 
 #[cfg(test)]
