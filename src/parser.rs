@@ -37,16 +37,6 @@ use crate::chunks::{
     res_value::ResValue,
 };
 
-/// XML nodes
-pub type XmlNode = Rc<RefCell<XmlElement>>;
-
-/// Representation of the whole XML document
-#[derive(Debug)]
-pub struct Axml {
-    /// Root of the XML doc
-    pub root: XmlNode,
-}
-
 /// Representation of an XML element with optional children
 #[derive(Debug)]
 pub struct XmlElement {
@@ -59,33 +49,6 @@ pub struct XmlElement {
 }
 
 impl XmlElement {
-    pub fn write_to_file(&self, file: &mut File) -> Result<(), Error> {
-        match self.to_string() {
-            Ok(str_xml) => {
-                file.write_all(str_xml.as_bytes())
-                    .expect("Couldn't write to file");
-                Ok(())
-            },
-            Err(err) => { Err(err) }
-        }
-    }
-
-    pub fn to_string(&self) -> Result<String, Error> {
-        let mut writer = Writer::new_with_indent(Vec::new(), b' ', 4);
-
-        writer
-            .write_event(Event::Decl(BytesDecl::new("1.0", Some("utf-8"), None)))
-            .unwrap();
-
-        self.write_element(&mut writer).unwrap();
-
-        let result = std::str::from_utf8(&writer.into_inner())
-            .expect("Failed to convert a slice of bytes to a string slice")
-            .to_string();
-
-        Ok(result)
-    }
-
     fn write_element<W: Write>(&self, writer: &mut Writer<W>) -> Result<(), Error> {
         let mut element = writer.create_element(&self.element_type);
 
@@ -115,6 +78,46 @@ impl XmlElement {
         }
 
         Ok(())
+    }
+}
+
+
+/// XML nodes
+pub type XmlNode = Rc<RefCell<XmlElement>>;
+
+/// Representation of the whole XML document
+#[derive(Debug)]
+pub struct Axml {
+    /// Root of the XML doc
+    pub root: XmlNode,
+}
+
+impl Axml {
+    pub fn write_to_file(&self, file: &mut File) -> Result<(), Error> {
+        match self.to_string() {
+            Ok(str_xml) => {
+                file.write_all(str_xml.as_bytes())
+                    .expect("Couldn't write to file");
+                Ok(())
+            },
+            Err(err) => { Err(err) }
+        }
+    }
+
+    pub fn to_string(&self) -> Result<String, Error> {
+        let mut writer = Writer::new_with_indent(Vec::new(), b' ', 4);
+
+        writer
+            .write_event(Event::Decl(BytesDecl::new("1.0", Some("utf-8"), None)))
+            .unwrap();
+
+        self.root.borrow().write_element(&mut writer).unwrap();
+
+        let result = std::str::from_utf8(&writer.into_inner())
+            .expect("Failed to convert a slice of bytes to a string slice")
+            .to_string();
+
+        Ok(result)
     }
 }
 
