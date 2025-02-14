@@ -1,7 +1,14 @@
+#![allow(dead_code)]
+
+//! Data value types
+//!
+//! Possible data type values in Dalvik and a helper method to parse a data type from an `u8`.
+
 /// Data value types
 ///
 /// Note: we ignore `TypeFirstInt`, `TypeFirstColorInt`, and `TypeLastColorInt` which hold the same values
 /// as actual data types (respectively `TypeIntDec`, `TypeIntColorArgb8`, and `TypeIntColorRgb4`).
+#[derive(Debug)]
 pub enum DataValueType {
     /// The 'data' is either 0 or 1, specifying this resource is either undefined or empty,
     ///respectively
@@ -47,7 +54,7 @@ pub enum DataValueType {
 }
 
 impl DataValueType {
-    /// Convert `u8` into a `DataValueType` 
+    /// Attempt to convert `u8` into a `DataValueType` 
     pub fn from_val(value: u8) -> Self {
         match value {
             0x00 => DataValueType::TypeNull,
@@ -69,4 +76,64 @@ impl DataValueType {
             _ => panic!("Error: unknown data value type {:02X}", value)
         }
     }
+}
+
+/// Where the unit type information is for complex values.
+/// This gives us 16 possible types, as defined below.
+const COMPLEX_UNIT_SHIF: u8 = 0;
+const COMPLEX_UNIT_MASK: u8 = 0xf;
+
+/// Structure of complex unit data values
+#[derive(Debug)]
+pub enum ComplexValueUnitType {
+    /// TYPE_DIMENSION: Value is raw pixels.
+    ComplexUnitPx = 0,
+    /// TYPE_DIMENSION: Value is Device Independent Pixels.
+    ComplexUnitDip = 1,
+    /// TYPE_DIMENSION: Value is a Scaled device independent Pixels.
+    ComplexUnitSp = 2,
+    /// TYPE_DIMENSION: Value is in points.
+    ComplexUnitPt = 3,
+    /// TYPE_DIMENSION: Value is in inches.
+    ComplexUnitIn = 4,
+    /// TYPE_DIMENSION: Value is in millimeters.
+    ComplexUnitMm = 5,
+}
+
+/// TYPE_FRACTION: A basic fraction of the overall size.
+const COMPLEX_UNIT_FRACTION: u8 = 0;
+/// TYPE_FRACTION: A fraction of the parent size.
+const COMPLEX_UNIT_FRACTION_PARENT: u8 = 1;
+
+/// Where the radix information is, telling where the decimal place
+/// appears in the mantissa.  This give us 4 possible fixed point
+/// representations as defined below.
+const COMPLEX_RADIX_SHIFT: u8 = 4;
+const COMPLEX_RADIX_MASK: u8 = 0x3;
+
+/// Where the actual value is.  This gives us 23 bits of
+/// precision.  The top bit is the sign.
+const COMPLEX_MANTISSA_SHIFT: u8 = 8;
+const COMPLEX_MANTISSA_MASK: u32 = 0xffffff;
+
+/// Structure of fraction complex data values
+#[derive(Debug)]
+pub enum ComplexValueFractionType {
+    /// The mantissa is an integral number -- i.e., 0xnnnnnn.0
+    ComplexRadix23p0 = 0,
+    /// The mantissa magnitude is 16 bits -- i.e, 0xnnnn.nn
+    ComplexRadix16p7 = 1,
+    /// The mantissa magnitude is 8 bits -- i.e, 0xnn.nnnn
+    ComplexRadix8p15 = 2,
+    /// The mantissa magnitude is 0 bits -- i.e, 0x0.nnnnnn
+    ComplexRadix0p23 = 3,
+}
+
+/// Possible values for `TYPE_NULL`
+#[derive(Debug)]
+pub enum DataNull {
+    /// The value is not defined.
+    DataNullUndefined = 0,
+    /// The value is explicitly defined as empty.
+    DataNullEmpty = 1
 }

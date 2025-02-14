@@ -1,3 +1,8 @@
+//! Chunk types
+//!
+//! This module contains the definition of all possible chunk types
+//! along with helper methods to parse and display them.
+
 use std::fmt;
 use std::io::{
     Error,
@@ -39,9 +44,9 @@ pub enum ChunkType {
 }
 
 impl ChunkType {
+    /// Attempt to parse the chunk type from a cursor of bytes
     pub fn parse_block_type(buff: &mut Cursor<Vec<u8>>) -> Result<Self, Error> {
-        let raw_block_type = buff.read_u16::<LittleEndian>();
-        let raw_block_type = match raw_block_type {
+        let raw_block_type = match buff.read_u16::<LittleEndian>() {
             Ok(block) => block,
             Err(e) => return Err(e),
         };
@@ -80,8 +85,8 @@ impl ChunkType {
     }
 }
 
-/* Implementation of the UpperHex trait for ChunkType */
 impl fmt::UpperHex for ChunkType {
+    /// Implementation of the `UpperHex` trait for `ChunkType`
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             ChunkType::ResNullType => write!(f, "{:X}", 0x0000),
@@ -105,6 +110,7 @@ impl fmt::UpperHex for ChunkType {
             ChunkType::ResTableTypeSpecType => write!(f, "{:X}", 0x0202),
             ChunkType::ResTableLibraryType => write!(f, "{:X}", 0x0203),
         }?;
+
         Ok(())
     }
 }

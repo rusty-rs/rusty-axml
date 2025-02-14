@@ -1,5 +1,3 @@
-#![allow(dead_code)]
-
 //! Representation of a chunk header
 //!
 //! An AXML document is composed of several chunks, and each chunk has a header.
@@ -10,16 +8,19 @@ use std::io::{
     Error,
     Cursor,
 };
+
 use byteorder::{
     LittleEndian,
     ReadBytesExt,
 };
+
 use crate::chunks::chunk_types::ChunkType;
 
 /// Header that appears at the beginning of every chunk
 #[derive(Debug)]
 pub struct ChunkHeader {
     /// Type identifier for this chunk.
+    ///
     /// The meaning of this value depends on the containing chunk.
     pub chunk_type: ChunkType,
 
