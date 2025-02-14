@@ -37,6 +37,16 @@ use crate::chunks::{
     res_value::ResValue,
 };
 
+/// XML nodes
+pub type XmlNode = Rc<RefCell<XmlElement>>;
+
+/// Representation of the whole XML document
+#[derive(Debug)]
+pub struct Axml {
+    /// Root of the XML doc
+    pub root: XmlNode,
+}
+
 /// Representation of an XML element with optional children
 #[derive(Debug)]
 pub struct XmlElement {
@@ -45,7 +55,7 @@ pub struct XmlElement {
     /// Attributes of the element (e.g., `exported`, `permission`)
     pub attributes: HashMap<String, String>,
     /// Vector of children of the XML element
-    pub children: Vec<Rc<RefCell<XmlElement>>>,
+    pub children: Vec<XmlNode>
 }
 
 impl XmlElement {
@@ -303,7 +313,7 @@ pub fn handle_event<T> (writer: &mut Writer<T>,
 }
 
 /// Parse a whole XML document
-pub fn parse_xml(mut axml_cursor: Cursor<Vec<u8>>) -> Rc<RefCell<XmlElement>> {
+pub fn parse_xml(mut axml_cursor: Cursor<Vec<u8>>) -> Axml {
     let mut global_strings = Vec::new();
     let mut namespace_prefixes = HashMap::<String, String>::new();
 
@@ -360,5 +370,5 @@ pub fn parse_xml(mut axml_cursor: Cursor<Vec<u8>>) -> Rc<RefCell<XmlElement>> {
         }
     }
 
-    root
+    Axml { root }
 }

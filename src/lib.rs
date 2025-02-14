@@ -17,7 +17,10 @@ use crate::chunks::{
     res_table::ResTable,
     string_pool::StringPool,
 };
-use crate::parser::XmlElement;
+use crate::parser::{
+    Axml,
+    XmlElement
+};
 
 /// Representation of an app's manifest contents
 #[derive(Debug, Default)]
@@ -100,7 +103,7 @@ pub fn create_cursor_from_axml(file_path: &str) -> Cursor<Vec<u8>> {
 ///
 /// [`create_cursor_from_axml`]: fn.create_cursor_from_axml.html
 /// [`create_cursor_from_apk`]: fn.create_cursor_from_apk.html
-pub fn parse_from_cursor(axml_cursor: Cursor<Vec<u8>>) -> Rc<RefCell<XmlElement>> {
+pub fn parse_from_cursor(axml_cursor: Cursor<Vec<u8>>) -> Axml {
     parser::parse_xml(axml_cursor)
 }
 
@@ -109,7 +112,7 @@ pub fn parse_from_cursor(axml_cursor: Cursor<Vec<u8>>) -> Rc<RefCell<XmlElement>
 /// Given a string that represents an AXML document, parses the string into XML.
 /// This function will return an `XmlElement` which represents the root of the
 /// parsed XML document.
-pub fn parse_from_string(axml_str: &str) -> Rc<RefCell<XmlElement>> {
+pub fn parse_from_string(axml_str: &str) -> Axml {
     let axml_cursor = Cursor::new(Vec::from(axml_str.as_bytes()));
     parser::parse_xml(axml_cursor)
 }
@@ -121,7 +124,7 @@ pub fn parse_from_string(axml_str: &str) -> Rc<RefCell<XmlElement>> {
 ///
 /// [`parse_from_string`]: fn.parse_from_string.html
 /// [`Read`]: https://doc.rust-lang.org/std/io/trait.Read.html
-pub fn parse_from_reader<R>(mut reader: R) -> Rc<RefCell<XmlElement>>
+pub fn parse_from_reader<R>(mut reader: R) -> Axml
 where
     R: Read,
 {
@@ -136,6 +139,8 @@ where
 }
 
 /// Use BFS tree traversal to get all element of a given type
+///
+/// TODO: use Axml type here instead
 fn find_elements_by_type(parsed_xml: &Rc<RefCell<XmlElement>>, element_type: &str) -> Vec<Rc<RefCell<XmlElement>>> {
     let mut result = Vec::new();
     let mut stack = vec![Rc::clone(parsed_xml)];
