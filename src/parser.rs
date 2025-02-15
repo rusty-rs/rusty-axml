@@ -131,6 +131,13 @@ impl Axml {
 
         Ok(result)
     }
+
+    /// Returns a non-consuming iterator over the AXML doc elements
+    pub fn iter(&self) -> AxmlIterator {
+        AxmlIterator {
+            stack: vec![Rc::clone(&self.root)]
+        }
+    }
 }
 
 pub struct AxmlIterator {
@@ -138,7 +145,6 @@ pub struct AxmlIterator {
     stack: Vec<XmlNode>,
 }
 
-// Consuming iterators
 impl IntoIterator for Axml {
     type Item = XmlNode;
     type IntoIter = AxmlIterator;
