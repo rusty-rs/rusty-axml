@@ -409,8 +409,7 @@ pub fn parse_xml(mut axml_cursor: Cursor<Vec<u8>>) -> Result<Axml, AxmlError> {
                 parse_end_namespace(&mut axml_cursor, &global_strings)?;
             },
             ChunkType::ResXmlStartElementType => {
-                // let (element_type, attrs) = parse_start_element(&mut axml_cursor, &global_strings, &namespace_prefixes).unwrap();
-                let element = parse_start_element(&mut axml_cursor, &global_strings, &namespace_prefixes).unwrap();
+                let element = parse_start_element(&mut axml_cursor, &global_strings, &namespace_prefixes)?;
 
                 if element.element_type == "manifest" {
                     stack.last().unwrap().borrow_mut().attributes = element.attributes.clone();
@@ -422,7 +421,7 @@ pub fn parse_xml(mut axml_cursor: Cursor<Vec<u8>>) -> Result<Axml, AxmlError> {
 
             },
             ChunkType::ResXmlEndElementType => {
-                parse_end_element(&mut axml_cursor, &global_strings).unwrap();
+                parse_end_element(&mut axml_cursor, &global_strings)?;
                 stack.pop();
             },
 
