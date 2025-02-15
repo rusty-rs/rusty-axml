@@ -140,6 +140,9 @@ impl Axml {
     }
 }
 
+/// Iterator over an AXML doc
+///
+/// Iterates through all of the parsed AXML doc elements using depth-first search
 pub struct AxmlIterator {
     /// Stack of nodes for depth-first traversal
     stack: Vec<XmlNode>,
