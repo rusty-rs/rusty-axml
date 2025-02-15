@@ -193,8 +193,8 @@ pub fn parse_start_namespace(axml_buff: &mut Cursor<Vec<u8>>,
     let prefix = axml_buff.read_u32::<LittleEndian>()?;
     let uri = axml_buff.read_u32::<LittleEndian>()?;
 
-    let prefix_str = strings.get(prefix as usize).ok_or(AxmlError::PoolStringError)?;
-    let uri_str = strings.get(uri as usize).ok_or(AxmlError::PoolStringError)?;
+    let prefix_str = strings.get(prefix as usize).ok_or(AxmlError::StringPoolError)?;
+    let uri_str = strings.get(uri as usize).ok_or(AxmlError::StringPoolError)?;
     namespaces.insert(uri_str.to_string(), prefix_str.to_string());
 
     Ok(())
@@ -326,7 +326,7 @@ pub fn parse_end_element(axml_buff: &mut Cursor<Vec<u8>>,
     let _namespace = axml_buff.read_u32::<LittleEndian>()?;
     let name = axml_buff.read_u32::<LittleEndian>()?;
 
-    let name = strings.get(name as usize).ok_or(AxmlError::PoolStringError)?;
+    let name = strings.get(name as usize).ok_or(AxmlError::StringPoolError)?;
     Ok(name.to_string())
 }
 
