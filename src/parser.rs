@@ -80,8 +80,17 @@ impl XmlElement {
 
         Ok(())
     }
-}
 
+    /// Get the element's name off of its attributes if it exists
+    pub fn get_name(&self) -> Option<&String> {
+        self.attributes.get("android:name")
+    }
+
+    /// Get an attribute from an `XmlElement` if it exists
+    pub fn get_attr(&self, attr_name: &str) -> Option<&String> {
+        self.attributes.get(attr_name)
+    }
+}
 
 /// XML nodes
 pub type XmlNode = Rc<RefCell<XmlElement>>;
