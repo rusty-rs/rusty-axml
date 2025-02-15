@@ -5,11 +5,12 @@ use std::fs::File;
 use rusty_axml::{
     create_cursor_from_apk,
     create_cursor_from_axml,
+    errors::AxmlError,
 };
 
 use crate::cli::ArgType;
 
-fn main() {
+fn main() -> Result<(), AxmlError> {
     // Check CLI arguments
     let args = cli::parse_args();
 
@@ -22,10 +23,10 @@ fn main() {
         ArgType::Apk  => { create_cursor_from_apk(&arg_path)  },
         ArgType::Axml => { create_cursor_from_axml(&arg_path) },
         _ => todo!()
-    };
+    }?;
 
     // Parse the XML
-    let axml = rusty_axml::parse_from_cursor(axml_cursor);
+    let axml = rusty_axml::parse_from_cursor(axml_cursor)?;
 
     // Write to file if `args::output` is not `None`
     match args.get_output_path() {
@@ -41,4 +42,6 @@ fn main() {
             };
         }
     }
+
+    Ok(())
 }

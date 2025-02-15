@@ -157,9 +157,10 @@ impl StringPool {
                                  .expect("Error: cannot decode string, using raw");
             } else {
                 str_size = axml_buff.read_u16::<LittleEndian>()? as u32;
+                // TODO: can we get rid of this unwrap here?
                 let iter = (0..str_size as usize)
-                        .map(|_| axml_buff.read_u16::<LittleEndian>().unwrap());
-                decoded_string = std::char::decode_utf16(iter).collect::<Result<String, _>>().unwrap();
+                    .map(|_| axml_buff.read_u16::<LittleEndian>().unwrap());
+                decoded_string = std::char::decode_utf16(iter).collect::<Result<String, _>>()?;
             }
 
             if str_size > 0 {

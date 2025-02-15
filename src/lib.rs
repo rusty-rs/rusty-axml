@@ -13,6 +13,8 @@ use std::io::{
 use std::rc::Rc;
 use std::cell::RefCell;
 
+use errors::AxmlError;
+
 use crate::chunks::{
     resource_map::ResourceMap,
     res_table::ResTable,
@@ -63,21 +65,21 @@ pub enum ComponentState {
 /// To read an AXML file directly use [`create_cursor_from_axml`] instead.
 ///
 /// [`create_cursor_from_axml`]: fn.create_cursor_from_axml.html
-pub fn create_cursor_from_apk(file_path: &str) -> Cursor<Vec<u8>> {
+pub fn create_cursor_from_apk(file_path: &str) -> Result<Cursor<Vec<u8>>, AxmlError> {
 
     let mut axml_cursor = Vec::new();
 
-    let zipfile = std::fs::File::open(file_path).unwrap();
-    let mut archive = zip::ZipArchive::new(zipfile).unwrap();
+    let zipfile = std::fs::File::open(file_path)?;
+    let mut archive = zip::ZipArchive::new(zipfile)?;
     let mut raw_file = match archive.by_name("AndroidManifest.xml") {
         Ok(file) => file,
         Err(..) => {
             panic!("Error: no AndroidManifest.xml in APK");
         }
     };
-    raw_file.read_to_end(&mut axml_cursor).expect("Error: cannot read manifest from app");
+    raw_file.read_to_end(&mut axml_cursor)?;
 
-    Cursor::new(axml_cursor)
+    Ok(Cursor::new(axml_cursor))
 }
 
 /// Open an AXML file, read the contents, and create a `Cursor` of the raw data
@@ -86,14 +88,14 @@ pub fn create_cursor_from_apk(file_path: &str) -> Cursor<Vec<u8>> {
 /// To read the manifest from an APK file use [`create_cursor_from_apk`] instead.
 ///
 /// [`create_cursor_from_apk`]: fn.create_cursor_from_apk.html
-pub fn create_cursor_from_axml(file_path: &str) -> Cursor<Vec<u8>> {
+pub fn create_cursor_from_axml(file_path: &str) -> Result<Cursor<Vec<u8>>, AxmlError> {
 
     let mut axml_cursor = Vec::new();
 
-    let mut raw_file = fs::File::open(file_path).expect("Error: cannot open AXML file");
-    raw_file.read_to_end(&mut axml_cursor).expect("Error: cannot read AXML file");
+    let mut raw_file = fs::File::open(file_path)?;
+    raw_file.read_to_end(&mut axml_cursor)?;
 
-    Cursor::new(axml_cursor)
+    Ok(Cursor::new(axml_cursor))
 }
 
 /// Parses the AXML file from a cursor.
@@ -104,11 +106,8 @@ pub fn create_cursor_from_axml(file_path: &str) -> Cursor<Vec<u8>> {
 ///
 /// [`create_cursor_from_axml`]: fn.create_cursor_from_axml.html
 /// [`create_cursor_from_apk`]: fn.create_cursor_from_apk.html
-pub fn parse_from_cursor(axml_cursor: Cursor<Vec<u8>>) -> Axml {
-    match parser::parse_xml(axml_cursor) {
-        Ok(axml) => axml,
-        Err(err) => panic!("{err}")
-    }
+pub fn parse_from_cursor(axml_cursor: Cursor<Vec<u8>>) -> Result<Axml, AxmlError> {
+    parser::parse_xml(axml_cursor)
 }
 
 /// Parses the AXML file from a string.
@@ -116,12 +115,9 @@ pub fn parse_from_cursor(axml_cursor: Cursor<Vec<u8>>) -> Axml {
 /// Given a string that represents an AXML document, parses the string into XML.
 /// This function will return an `XmlElement` which represents the root of the
 /// parsed XML document.
-pub fn parse_from_string(axml_str: &str) -> Axml {
+pub fn parse_from_string(axml_str: &str) -> Result<Axml, AxmlError> {
     let axml_cursor = Cursor::new(Vec::from(axml_str.as_bytes()));
-    match parser::parse_xml(axml_cursor) {
-        Ok(axml) => axml,
-        Err(err) => panic!("{err}")
-    }
+    parser::parse_xml(axml_cursor)
 }
 
 /// Parses the AXML from a generic reader
@@ -131,21 +127,15 @@ pub fn parse_from_string(axml_str: &str) -> Axml {
 ///
 /// [`parse_from_string`]: fn.parse_from_string.html
 /// [`Read`]: https://doc.rust-lang.org/std/io/trait.Read.html
-pub fn parse_from_reader<R>(mut reader: R) -> Axml
+pub fn parse_from_reader<R>(mut reader: R) -> Result<Axml, AxmlError>
 where
     R: Read,
 {
-    // TODO: properly handle errors while reading
     let mut axml_vec = Vec::<u8>::new();
-    if let Err(err) = reader.read_to_end(&mut axml_vec) {
-        panic!("Error: cannot read bytes from reader: {err}");
-    }
+    reader.read_to_end(&mut axml_vec)?;
 
     let axml_cursor = Cursor::new(axml_vec);
-    match parser::parse_xml(axml_cursor) {
-        Ok(axml) => axml,
-        Err(err) => panic!("{err}")
-    }
+    parser::parse_xml(axml_cursor)
 }
 
 /// Use BFS tree traversal to get all element of a given type

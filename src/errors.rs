@@ -4,24 +4,18 @@
 //! encounter and their associated error messages. We use
 //! `thiserror` for the heavy lifting.
 
-/*
-use std::fmt::Display;
-
-impl Display for AxmlError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match AxmlErro
-    }
-}
-*/
-
 use thiserror::Error;
 
 #[derive(Error, Debug)]
 pub enum AxmlError {
     #[error("reading from the cursor of bytes")]
-    CursorReadError(#[from] std::io::Error),
+    IoError(#[from] std::io::Error),
+    #[error("cannot decode string from UTF-16")]
+    StringDecodeError(#[from] std::char::DecodeUtf16Error),
     #[error("string not in the string pool")]
     StringPoolError,
     #[error("unknown namespace")]
     NamespaceError,
+    #[error("zip file error")]
+    ZipFileError(#[from] zip::result::ZipError)
 }
