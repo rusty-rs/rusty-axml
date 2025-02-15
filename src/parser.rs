@@ -49,6 +49,7 @@ pub struct XmlElement {
 }
 
 impl XmlElement {
+    /// Write an `XmlElement` into a writer
     fn write_element<W: Write>(&self, writer: &mut Writer<W>) -> Result<(), Error> {
         let mut element = writer.create_element(&self.element_type);
 
@@ -93,6 +94,7 @@ pub struct Axml {
 }
 
 impl Axml {
+    /// Write the whole parsed XML to a file
     pub fn write_to_file(&self, file: &mut File) -> Result<(), Error> {
         match self.to_string() {
             Ok(str_xml) => {
@@ -104,6 +106,7 @@ impl Axml {
         }
     }
 
+    /// Convert the whole parsed XML into a string
     pub fn to_string(&self) -> Result<String, Error> {
         let mut writer = Writer::new_with_indent(Vec::new(), b' ', 4);
 
