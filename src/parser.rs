@@ -133,6 +133,39 @@ impl Axml {
     }
 }
 
+pub struct AxmlIterator {
+    /// Stack of nodes for depth-first traversal
+    stack: Vec<XmlNode>,
+}
+
+// Consuming iterators
+impl IntoIterator for Axml {
+    type Item = XmlNode;
+    type IntoIter = AxmlIterator;
+
+    fn into_iter(self) -> Self::IntoIter {
+        AxmlIterator {
+            stack: vec![Rc::clone(&self.root)],
+        }
+    }
+}
+
+impl Iterator for AxmlIterator {
+    type Item = XmlNode;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        match self.stack.pop() {
+            Some(node) => {
+                for child in &node.borrow().children {
+                    self.stack.push(Rc::clone(child));
+                }
+                Some(node)
+            },
+            None => None,
+        }
+    }
+}
+
 /// Parse the start of a namepace
 pub fn parse_start_namespace(axml_buff: &mut Cursor<Vec<u8>>,
                              strings: &[String],
