@@ -4,7 +4,6 @@
 //! representing the actual XML.
 
 use std::collections::HashMap;
-use std::borrow::Cow;
 use std::rc::Rc;
 use std::cell::RefCell;
 use std::io::{
@@ -20,10 +19,9 @@ use byteorder::{
 };
 
 use quick_xml::Writer;
-use quick_xml::events::{BytesDecl, BytesEnd, BytesStart, Event};
-use quick_xml::events::attributes::Attribute;
-use quick_xml::name::QName;
+use quick_xml::events::{BytesDecl, Event};
 
+use crate::errors::AxmlError;
 use crate::{
     ResourceMap,
     StringPool,
@@ -104,11 +102,10 @@ pub struct Axml {
 
 impl Axml {
     /// Write the whole parsed XML to a file
-    pub fn write_to_file(&self, file: &mut File) -> Result<(), Error> {
+    pub fn write_to_file(&self, file: &mut File) -> Result<(), AxmlError> {
         match self.to_string() {
             Ok(str_xml) => {
-                file.write_all(str_xml.as_bytes())
-                    .expect("Couldn't write to file");
+                file.write_all(str_xml.as_bytes())?;
                 Ok(())
             },
             Err(err) => { Err(err) }
@@ -116,17 +113,15 @@ impl Axml {
     }
 
     /// Convert the whole parsed XML into a string
-    pub fn to_string(&self) -> Result<String, Error> {
+    pub fn to_string(&self) -> Result<String, AxmlError> {
         let mut writer = Writer::new_with_indent(Vec::new(), b' ', 4);
 
         writer
-            .write_event(Event::Decl(BytesDecl::new("1.0", Some("utf-8"), None)))
-            .unwrap();
+            .write_event(Event::Decl(BytesDecl::new("1.0", Some("utf-8"), None)))?;
 
-        self.root.borrow().write_element(&mut writer).unwrap();
+        self.root.borrow().write_element(&mut writer)?;
 
-        let result = std::str::from_utf8(&writer.into_inner())
-            .expect("Failed to convert a slice of bytes to a string slice")
+        let result = std::str::from_utf8(&writer.into_inner())?
             .to_string();
 
         Ok(result)
@@ -178,88 +173,90 @@ impl Iterator for AxmlIterator {
 /// Parse the start of a namepace
 pub fn parse_start_namespace(axml_buff: &mut Cursor<Vec<u8>>,
                              strings: &[String],
-                             namespaces: &mut HashMap::<String, String>) {
+                             namespaces: &mut HashMap::<String, String>) -> Result<(), AxmlError> {
     // Go back 2 bytes, to account from the block type
     let offset = axml_buff.position();
     axml_buff.set_position(offset - 2);
 
     // Parse chunk header
-    let _header = ChunkHeader::from_buff(axml_buff, ChunkType::ResXmlStartNamespaceType)
-                 .expect("Error: cannot get header from start namespace chunk");
+    let _header = ChunkHeader::from_buff(axml_buff, ChunkType::ResXmlStartNamespaceType)?;
 
-    let _line_number = axml_buff.read_u32::<LittleEndian>().unwrap();
-    let _comment = axml_buff.read_u32::<LittleEndian>().unwrap();
-    let prefix = axml_buff.read_u32::<LittleEndian>().unwrap();
-    let uri = axml_buff.read_u32::<LittleEndian>().unwrap();
+    let _line_number = axml_buff.read_u32::<LittleEndian>()?;
+    let _comment = axml_buff.read_u32::<LittleEndian>()?;
+    let prefix = axml_buff.read_u32::<LittleEndian>()?;
+    let uri = axml_buff.read_u32::<LittleEndian>()?;
 
-    let prefix_str = strings.get(prefix as usize).unwrap();
-    let uri_str = strings.get(uri as usize).unwrap();
+    let prefix_str = strings.get(prefix as usize).ok_or(AxmlError::StringPoolError)?;
+    let uri_str = strings.get(uri as usize).ok_or(AxmlError::StringPoolError)?;
     namespaces.insert(uri_str.to_string(), prefix_str.to_string());
+
+    Ok(())
 }
 
 /// Parse the end of a namepace
 pub fn parse_end_namespace(axml_buff: &mut Cursor<Vec<u8>>,
-                           _strings: &[String]) {
+                           _strings: &[String]) -> Result<(), AxmlError> {
     // Go back 2 bytes, to account from the block type
     let offset = axml_buff.position();
     axml_buff.set_position(offset - 2);
 
     // Parse chunk header
-    let _header = ChunkHeader::from_buff(axml_buff, ChunkType::ResXmlEndNamespaceType)
-                 .expect("Error: cannot get header from start namespace chunk");
+    let _header = ChunkHeader::from_buff(axml_buff, ChunkType::ResXmlEndNamespaceType)?;
 
-    let _line_number = axml_buff.read_u32::<LittleEndian>().unwrap();
-    let _comment = axml_buff.read_u32::<LittleEndian>().unwrap();
-    let _prefix = axml_buff.read_u32::<LittleEndian>().unwrap();
-    let _uri = axml_buff.read_u32::<LittleEndian>().unwrap();
+    let _line_number = axml_buff.read_u32::<LittleEndian>()?;
+    let _comment = axml_buff.read_u32::<LittleEndian>()?;
+    let _prefix = axml_buff.read_u32::<LittleEndian>()?;
+    let _uri = axml_buff.read_u32::<LittleEndian>()?;
+
+    Ok(())
 }
 
 /// Parser the start of an element
 pub fn parse_start_element(axml_buff: &mut Cursor<Vec<u8>>,
                            strings: &[String],
-                           namespace_prefixes: &HashMap::<String, String>) -> XmlElement {
+                           namespace_prefixes: &HashMap::<String, String>) -> Result<XmlElement, AxmlError> {
     // Go back 2 bytes, to account from the block type
     let offset = axml_buff.position();
     axml_buff.set_position(offset - 2);
 
     // Parse chunk header
-    let _header = ChunkHeader::from_buff(axml_buff, ChunkType::ResXmlStartElementType)
-                 .expect("Error: cannot get header from start namespace chunk");
+    let _header = ChunkHeader::from_buff(axml_buff, ChunkType::ResXmlStartElementType)?;
 
-    let _line_number = axml_buff.read_u32::<LittleEndian>().unwrap();
-    let _comment = axml_buff.read_u32::<LittleEndian>().unwrap();
-    let _namespace = axml_buff.read_u32::<LittleEndian>().unwrap();
-    let name = axml_buff.read_u32::<LittleEndian>().unwrap();
-    let _attribute_size = axml_buff.read_u32::<LittleEndian>().unwrap();
-    let attribute_count = axml_buff.read_u16::<LittleEndian>().unwrap();
-    let _id_index = axml_buff.read_u16::<LittleEndian>().unwrap();
-    let _class_index = axml_buff.read_u16::<LittleEndian>().unwrap();
-    let _style_index = axml_buff.read_u16::<LittleEndian>().unwrap();
+    let _line_number = axml_buff.read_u32::<LittleEndian>()?;
+    let _comment = axml_buff.read_u32::<LittleEndian>()?;
+    let _namespace = axml_buff.read_u32::<LittleEndian>()?;
+    let name = axml_buff.read_u32::<LittleEndian>()?;
+    let _attribute_size = axml_buff.read_u32::<LittleEndian>()?;
+    let attribute_count = axml_buff.read_u16::<LittleEndian>()?;
+    let _id_index = axml_buff.read_u16::<LittleEndian>()?;
+    let _class_index = axml_buff.read_u16::<LittleEndian>()?;
+    let _style_index = axml_buff.read_u16::<LittleEndian>()?;
 
-    let element_type = strings.get(name as usize).unwrap().to_string();
+    let element_type = strings.get(name as usize).ok_or(AxmlError::StringPoolError)?.to_string();
 
     let mut decoded_attrs = HashMap::<String, String>::new();
     for _ in 0..attribute_count {
-        let attr_namespace = axml_buff.read_u32::<LittleEndian>().unwrap();
-        let attr_name = axml_buff.read_u32::<LittleEndian>().unwrap();
-        let attr_raw_val = axml_buff.read_u32::<LittleEndian>().unwrap();
-        let data_value_type = ResValue::from_buff(axml_buff).unwrap();
+        let attr_namespace = axml_buff.read_u32::<LittleEndian>()?;
+        let attr_name = axml_buff.read_u32::<LittleEndian>()?;
+        let attr_raw_val = axml_buff.read_u32::<LittleEndian>()?;
+        let data_value_type = ResValue::from_buff(axml_buff)?;
 
         let mut decoded_attr_key = String::new();
         let mut decoded_attr_val = String::new();
 
         if attr_namespace != 0xffffffff {
-            let ns_prefix = namespace_prefixes.get(strings.get(attr_namespace as usize).unwrap()).unwrap();
+            let namespace = strings.get(attr_namespace as usize).ok_or(AxmlError::StringPoolError)?;
+            let ns_prefix = namespace_prefixes.get(namespace).ok_or(AxmlError::NamespaceError)?;
             decoded_attr_key.push_str(ns_prefix);
             decoded_attr_key.push(':');
         } else {
             // TODO
         }
 
-        decoded_attr_key.push_str(strings.get(attr_name as usize).unwrap());
+        decoded_attr_key.push_str(strings.get(attr_name as usize).ok_or(AxmlError::StringPoolError)?);
 
         if attr_raw_val != 0xffffffff {
-            decoded_attr_val.push_str(&strings.get(attr_raw_val as usize).unwrap().to_string());
+            decoded_attr_val.push_str(&strings.get(attr_raw_val as usize).ok_or(AxmlError::StringPoolError)?.to_string());
         } else {
             match data_value_type.data_type {
                 DataValueType::TypeNull => println!("TODO: DataValueType::TypeNull"),
@@ -298,79 +295,34 @@ pub fn parse_start_element(axml_buff: &mut Cursor<Vec<u8>>,
         );
     }
 
-    XmlElement {
+    Ok(XmlElement {
         element_type,
         attributes: decoded_attrs,
         children: Vec::new()
-    }
+    })
 }
 
 /// Parser the end of an element
 pub fn parse_end_element(axml_buff: &mut Cursor<Vec<u8>>,
-                         strings: &[String]) -> Result<String, Error> {
+                         strings: &[String]) -> Result<String, AxmlError> {
     // Go back 2 bytes, to account from the block type
     let offset = axml_buff.position();
     axml_buff.set_position(offset - 2);
 
     // Parse chunk header
-    let _header = ChunkHeader::from_buff(axml_buff, ChunkType::ResXmlEndElementType)
-                 .expect("Error: cannot get header from start namespace chunk");
+    let _header = ChunkHeader::from_buff(axml_buff, ChunkType::ResXmlEndElementType)?;
 
-    let _line_number = axml_buff.read_u32::<LittleEndian>().unwrap();
-    let _comment = axml_buff.read_u32::<LittleEndian>().unwrap();
-    let _namespace = axml_buff.read_u32::<LittleEndian>().unwrap();
-    let name = axml_buff.read_u32::<LittleEndian>().unwrap();
+    let _line_number = axml_buff.read_u32::<LittleEndian>()?;
+    let _comment = axml_buff.read_u32::<LittleEndian>()?;
+    let _namespace = axml_buff.read_u32::<LittleEndian>()?;
+    let name = axml_buff.read_u32::<LittleEndian>()?;
 
-    Ok(strings.get(name as usize).unwrap().to_string())
-}
-
-/// Handler for XML events
-pub fn handle_event<T> (writer: &mut Writer<T>,
-                        element_name: String,
-                        element_attrs: Vec<(String, String)>,
-                        namespace_prefixes: &HashMap::<String, String>,
-                        block_type: ChunkType) where T: std::io::Write {
-    match block_type {
-        ChunkType::ResXmlStartElementType => {
-            // let mut elem = BytesStart::from_content(element_name.as_bytes(), element_name.len());
-            let mut elem = BytesStart::new(&element_name);
-
-            if element_name == "manifest" {
-                for (k, v) in namespace_prefixes.iter() {
-                    if v == "android" {
-                        let mut key = String::new();
-                        key.push_str("xmlns:");
-                        key.push_str(v);
-                        let attr = Attribute {
-                            key: QName(key.as_bytes()),
-                            value: Cow::Borrowed(k.as_bytes())
-                        };
-                        elem.push_attribute(attr);
-                        break;
-                    }
-                }
-            }
-
-            for (attr_key, attr_val) in element_attrs {
-                let attr = Attribute {
-                    key: QName(attr_key.as_bytes()),
-                    value: Cow::Borrowed(attr_val.as_bytes())
-                };
-                elem.push_attribute(attr);
-            }
-
-            assert!(writer.write_event(Event::Start(elem)).is_ok());
-
-        },
-        ChunkType::ResXmlEndElementType => {
-            assert!(writer.write_event(Event::End(BytesEnd::new(element_name))).is_ok());
-        },
-        _ => println!("{:02X}, other", block_type),
-    }
+    let name = strings.get(name as usize).ok_or(AxmlError::StringPoolError)?;
+    Ok(name.to_string())
 }
 
 /// Parse a whole XML document
-pub fn parse_xml(mut axml_cursor: Cursor<Vec<u8>>) -> Axml {
+pub fn parse_xml(mut axml_cursor: Cursor<Vec<u8>>) -> Result<Axml, AxmlError> {
     let mut global_strings = Vec::new();
     let mut namespace_prefixes = HashMap::<String, String>::new();
 
@@ -386,24 +338,23 @@ pub fn parse_xml(mut axml_cursor: Cursor<Vec<u8>>) -> Axml {
         match block_type {
             ChunkType::ResNullType => continue,
             ChunkType::ResStringPoolType => {
-                let _ = StringPool::from_buff(&mut axml_cursor, &mut global_strings);
+                let _ = StringPool::from_buff(&mut axml_cursor, &mut global_strings)?;
             },
             ChunkType::ResTableType => {
-                ResTable::parse(&mut axml_cursor);
+                let _ = ResTable::parse(&mut axml_cursor)?;
             },
             ChunkType::ResXmlType => {
                 axml_cursor.set_position(axml_cursor.position() - 2);
-                let _ = ChunkHeader::from_buff(&mut axml_cursor, ChunkType::ResXmlType);
+                let _ = ChunkHeader::from_buff(&mut axml_cursor, ChunkType::ResXmlType)?;
             },
             ChunkType::ResXmlStartNamespaceType => {
-                parse_start_namespace(&mut axml_cursor, &global_strings, &mut namespace_prefixes);
+                parse_start_namespace(&mut axml_cursor, &global_strings, &mut namespace_prefixes)?;
             },
             ChunkType::ResXmlEndNamespaceType => {
-                parse_end_namespace(&mut axml_cursor, &global_strings);
+                parse_end_namespace(&mut axml_cursor, &global_strings)?;
             },
             ChunkType::ResXmlStartElementType => {
-                // let (element_type, attrs) = parse_start_element(&mut axml_cursor, &global_strings, &namespace_prefixes).unwrap();
-                let element = parse_start_element(&mut axml_cursor, &global_strings, &namespace_prefixes);
+                let element = parse_start_element(&mut axml_cursor, &global_strings, &namespace_prefixes)?;
 
                 if element.element_type == "manifest" {
                     stack.last().unwrap().borrow_mut().attributes = element.attributes.clone();
@@ -415,17 +366,17 @@ pub fn parse_xml(mut axml_cursor: Cursor<Vec<u8>>) -> Axml {
 
             },
             ChunkType::ResXmlEndElementType => {
-                parse_end_element(&mut axml_cursor, &global_strings).unwrap();
+                parse_end_element(&mut axml_cursor, &global_strings)?;
                 stack.pop();
             },
 
             ChunkType::ResXmlResourceMapType => {
-                let _ = ResourceMap::from_buff(&mut axml_cursor);
+                let _ = ResourceMap::from_buff(&mut axml_cursor)?;
             },
 
             _ => { },
         }
     }
 
-    Axml { root }
+    Ok(Axml { root })
 }

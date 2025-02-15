@@ -7,13 +7,11 @@
 
 use crate::chunks::{
     chunk_header::ChunkHeader,
-    chunk_types::ChunkType
+    chunk_types::ChunkType,
 };
+use crate::errors::AxmlError;
 
-use std::io::{
-    Error,
-    Cursor,
-};
+use std::io::Cursor;
 
 use byteorder::{
     LittleEndian,
@@ -1363,20 +1361,19 @@ pub struct ResourceMap {
 
 impl ResourceMap {
     /// Parse a from a cursor of bytes
-    pub fn from_buff(axml_buff: &mut Cursor<Vec<u8>>) -> Result<Self, Error> {
-        /* Go back 2 bytes, to account from the block type */
+    pub fn from_buff(axml_buff: &mut Cursor<Vec<u8>>) -> Result<Self, AxmlError> {
+        // Go back 2 bytes, to account from the block type
         let offset = axml_buff.position();
         axml_buff.set_position(offset - 2);
 
-        /* Parse chunk header */
-        let header = ChunkHeader::from_buff(axml_buff, ChunkType::ResXmlResourceMapType)
-                     .expect("Error: cannot get chunk header from string pool");
+        // Parse chunk header
+        let header = ChunkHeader::from_buff(axml_buff, ChunkType::ResXmlResourceMapType)?;
 
-        /* Get resources IDs */
+        // Get resources IDs
         let mut resources_id = Vec::new();
         let nb_resources = (header.chunk_size / 4) - 2;
         for _ in 0..nb_resources {
-            let id = axml_buff.read_u32::<LittleEndian>().unwrap();
+            let id = axml_buff.read_u32::<LittleEndian>()?;
             resources_id.push(id);
         }
 

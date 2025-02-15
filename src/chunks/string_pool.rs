@@ -7,9 +7,12 @@
 //! the size of the binary XML as there is no duplication of strings
 //! anymore.
 
-use crate::chunks::{
-    chunk_header::ChunkHeader,
-    chunk_types::ChunkType,
+use crate::{
+    chunks::{
+        chunk_header::ChunkHeader,
+        chunk_types::ChunkType,
+    },
+    errors::AxmlError
 };
 
 use std::io::{
@@ -87,7 +90,7 @@ pub struct StringPool {
 impl StringPool {
     /// Parse the string pool from the raw data
     pub fn from_buff(axml_buff: &mut Cursor<Vec<u8>>,
-                 global_strings: &mut Vec<String>) -> Self {
+                 global_strings: &mut Vec<String>) -> Result<Self, AxmlError> {
 
         // Go back 2 bytes, to account from the block type
         let initial_offset = axml_buff.position() - 2;
@@ -95,29 +98,28 @@ impl StringPool {
         let initial_offset = initial_offset as u32;
 
         // Parse chunk header
-        let header = ChunkHeader::from_buff(axml_buff, ChunkType::ResStringPoolType)
-                     .expect("Error: cannot get chunk header from string pool");
+        let header = ChunkHeader::from_buff(axml_buff, ChunkType::ResStringPoolType)?;
 
         // Get remaining members
-        let string_count = axml_buff.read_u32::<LittleEndian>().unwrap();
-        let style_count = axml_buff.read_u32::<LittleEndian>().unwrap();
-        let flags = axml_buff.read_u32::<LittleEndian>().unwrap();
+        let string_count = axml_buff.read_u32::<LittleEndian>()?;
+        let style_count = axml_buff.read_u32::<LittleEndian>()?;
+        let flags = axml_buff.read_u32::<LittleEndian>()?;
         let is_sorted = (flags & (1<<0)) != 0;
         let is_utf8 = (flags & (1<<8)) != 0;
-        let strings_start = axml_buff.read_u32::<LittleEndian>().unwrap();
-        let styles_start = axml_buff.read_u32::<LittleEndian>().unwrap();
+        let strings_start = axml_buff.read_u32::<LittleEndian>()?;
+        let styles_start = axml_buff.read_u32::<LittleEndian>()?;
 
         // Get strings offsets
         let mut strings_offsets = Vec::new();
         for _ in 0..string_count {
-            let offset = axml_buff.read_u32::<LittleEndian>().unwrap();
+            let offset = axml_buff.read_u32::<LittleEndian>()?;
             strings_offsets.push(offset);
         }
 
         // Get styles offsets
         let mut styles_offsets = Vec::new();
         for _ in 0..style_count {
-            let offset = axml_buff.read_u32::<LittleEndian>().unwrap();
+            let offset = axml_buff.read_u32::<LittleEndian>()?;
             styles_offsets.push(offset);
         }
 
@@ -143,20 +145,20 @@ impl StringPool {
                 // Actually, there are two length if the file is in UTF-8: the encoded and decoded lengths
                 //
 
-                let _encoded_size = axml_buff.read_u8().unwrap() as u32;
-                str_size = axml_buff.read_u8().unwrap() as u32;
+                let _encoded_size = axml_buff.read_u8()? as u32;
+                str_size = axml_buff.read_u8()? as u32;
                 let mut str_buff = Vec::with_capacity(str_size as usize);
                 let mut chunk = axml_buff.take(str_size.into());
 
-                chunk.read_to_end(&mut str_buff).unwrap();
-                // decoded_string = String::from_utf8(str_buff).unwrap();
-                decoded_string = String::from_utf8(str_buff)
-                                 .expect("Error: cannot decode string, using raw");
+                chunk.read_to_end(&mut str_buff)?;
+                // decoded_string = String::from_utf8(str_buff)?;
+                decoded_string = String::from_utf8(str_buff)?;
             } else {
-                str_size = axml_buff.read_u16::<LittleEndian>().unwrap() as u32;
+                str_size = axml_buff.read_u16::<LittleEndian>()? as u32;
+                // TODO: can we get rid of this unwrap here?
                 let iter = (0..str_size as usize)
-                        .map(|_| axml_buff.read_u16::<LittleEndian>().unwrap());
-                decoded_string = std::char::decode_utf16(iter).collect::<Result<String, _>>().unwrap();
+                    .map(|_| axml_buff.read_u16::<LittleEndian>().unwrap());
+                decoded_string = std::char::decode_utf16(iter).collect::<Result<String, _>>()?;
             }
 
             if str_size > 0 {
@@ -169,9 +171,11 @@ impl StringPool {
             let current_start = (initial_offset + strings_start + offset) as u64;
             axml_buff.set_position(current_start);
 
-            let string_pool_ref = StringPoolRef { index: axml_buff.read_u32::<LittleEndian>().unwrap() };
-            let first_char = axml_buff.read_u32::<LittleEndian>().unwrap();
-            let last_char = axml_buff.read_u32::<LittleEndian>().unwrap();
+            let string_pool_ref = StringPoolRef {
+                index: axml_buff.read_u32::<LittleEndian>()?
+            };
+            let first_char = axml_buff.read_u32::<LittleEndian>()?;
+            let last_char = axml_buff.read_u32::<LittleEndian>()?;
 
             styles.push(StringPoolSpan {
                 name: string_pool_ref,
@@ -180,7 +184,7 @@ impl StringPool {
             });
         }
 
-        StringPool {
+        Ok(StringPool {
             header,
             string_count,
             style_count,
@@ -192,7 +196,7 @@ impl StringPool {
             styles_offsets,
             strings: global_strings.to_vec(),
             styles
-        }
+        })
     }
 }
 
@@ -280,7 +284,7 @@ mod tests {
         let mut global_strings = Vec::new();
 
         // Parse string pool from buffer
-        let string_pool = StringPool::from_buff(&mut buffer, &mut global_strings);
+        let string_pool = StringPool::from_buff(&mut buffer, &mut global_strings).unwrap();
 
         // Validate that the string pool is parsed correctly
         assert_eq!(string_pool.strings.len(), 2);
@@ -298,7 +302,7 @@ mod tests {
         let mut global_strings = Vec::new();
 
         // Parse string pool from buffer
-        let string_pool = StringPool::from_buff(&mut buffer, &mut global_strings);
+        let string_pool = StringPool::from_buff(&mut buffer, &mut global_strings).unwrap();
 
         // Validate the flags
         assert!(string_pool.is_sorted);
@@ -327,7 +331,7 @@ mod tests {
 
         let mut global_strings = Vec::new();
 
-        let string_pool = StringPool::from_buff(&mut buffer, &mut global_strings);
+        let string_pool = StringPool::from_buff(&mut buffer, &mut global_strings).unwrap();
 
         // Check that the string pool is correctly parsed and contains no strings
         assert_eq!(string_pool.strings.len(), 0);
@@ -361,7 +365,7 @@ mod tests {
 
         let mut global_strings = Vec::new();
 
-        let string_pool = StringPool::from_buff(&mut buffer, &mut global_strings);
+        let string_pool = StringPool::from_buff(&mut buffer, &mut global_strings).unwrap();
 
         // Validate that the string pool has correctly decoded the UTF-8 string
         assert_eq!(string_pool.strings.len(), 1);
