@@ -49,6 +49,7 @@ pub struct XmlElement {
 }
 
 impl XmlElement {
+    /// Write an `XmlElement` into a writer
     fn write_element<W: Write>(&self, writer: &mut Writer<W>) -> Result<(), Error> {
         let mut element = writer.create_element(&self.element_type);
 
@@ -79,8 +80,17 @@ impl XmlElement {
 
         Ok(())
     }
-}
 
+    /// Get the element's name off of its attributes if it exists
+    pub fn get_name(&self) -> Option<&String> {
+        self.attributes.get("android:name")
+    }
+
+    /// Get an attribute from an `XmlElement` if it exists
+    pub fn get_attr(&self, attr_name: &str) -> Option<&String> {
+        self.attributes.get(attr_name)
+    }
+}
 
 /// XML nodes
 pub type XmlNode = Rc<RefCell<XmlElement>>;
@@ -93,6 +103,7 @@ pub struct Axml {
 }
 
 impl Axml {
+    /// Write the whole parsed XML to a file
     pub fn write_to_file(&self, file: &mut File) -> Result<(), Error> {
         match self.to_string() {
             Ok(str_xml) => {
@@ -104,6 +115,7 @@ impl Axml {
         }
     }
 
+    /// Convert the whole parsed XML into a string
     pub fn to_string(&self) -> Result<String, Error> {
         let mut writer = Writer::new_with_indent(Vec::new(), b' ', 4);
 
@@ -118,6 +130,48 @@ impl Axml {
             .to_string();
 
         Ok(result)
+    }
+
+    /// Returns a non-consuming iterator over the AXML doc elements
+    pub fn iter(&self) -> AxmlIterator {
+        AxmlIterator {
+            stack: vec![Rc::clone(&self.root)]
+        }
+    }
+}
+
+/// Iterator over an AXML doc
+///
+/// Iterates through all of the parsed AXML doc elements using depth-first search
+pub struct AxmlIterator {
+    /// Stack of nodes for depth-first traversal
+    stack: Vec<XmlNode>,
+}
+
+impl IntoIterator for Axml {
+    type Item = XmlNode;
+    type IntoIter = AxmlIterator;
+
+    fn into_iter(self) -> Self::IntoIter {
+        AxmlIterator {
+            stack: vec![Rc::clone(&self.root)],
+        }
+    }
+}
+
+impl Iterator for AxmlIterator {
+    type Item = XmlNode;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        match self.stack.pop() {
+            Some(node) => {
+                for child in &node.borrow().children {
+                    self.stack.push(Rc::clone(child));
+                }
+                Some(node)
+            },
+            None => None,
+        }
     }
 }
 
