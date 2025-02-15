@@ -22,4 +22,6 @@ pub enum AxmlError {
     CursorReadError(#[from] std::io::Error),
     #[error("string not in the string pool")]
     StringPoolError,
+    #[error("unknown namespace")]
+    NamespaceError,
 }
