@@ -1362,15 +1362,14 @@ pub struct ResourceMap {
 impl ResourceMap {
     /// Parse a from a cursor of bytes
     pub fn from_buff(axml_buff: &mut Cursor<Vec<u8>>) -> Result<Self, AxmlError> {
-        /* Go back 2 bytes, to account from the block type */
+        // Go back 2 bytes, to account from the block type
         let offset = axml_buff.position();
         axml_buff.set_position(offset - 2);
 
-        /* Parse chunk header */
-        let header = ChunkHeader::from_buff(axml_buff, ChunkType::ResXmlResourceMapType)
-                     .expect("Error: cannot get chunk header from string pool");
+        // Parse chunk header
+        let header = ChunkHeader::from_buff(axml_buff, ChunkType::ResXmlResourceMapType)?;
 
-        /* Get resources IDs */
+        // Get resources IDs
         let mut resources_id = Vec::new();
         let nb_resources = (header.chunk_size / 4) - 2;
         for _ in 0..nb_resources {

@@ -42,8 +42,7 @@ impl ResTable {
         axml_buff.set_position(initial_offset - 2);
 
         // Parse chunk header
-        let header = ChunkHeader::from_buff(axml_buff, ChunkType::ResTableType)
-                     .expect("Error: cannot get chunk header from string pool");
+        let header = ChunkHeader::from_buff(axml_buff, ChunkType::ResTableType)?;
 
         // Get package count
         let package_count = axml_buff.read_u32::<LittleEndian>()?;
@@ -52,15 +51,13 @@ impl ResTable {
 
         // TODO: these are just ignored
         for _ in 0..package_count {
-            let block_type = ChunkType::parse_block_type(axml_buff)
-                            .expect("Error: cannot parse block type");
+            let block_type = ChunkType::parse_block_type(axml_buff)?;
             match block_type {
                 ChunkType::ResStringPoolType => {
                     StringPool::from_buff(axml_buff, &mut strings)?;
                 },
                 ChunkType::ResTablePackageType => {
-                    ResTablePackage::parse(axml_buff)
-                                    .expect("Error: cannot parse table package");
+                    ResTablePackage::parse(axml_buff)?;
                 },
                 _ => { panic!("######## Unexpected block type: {:02X}", block_type); }
             };
@@ -120,8 +117,7 @@ impl ResTablePackage {
         axml_buff.set_position(initial_offset - 2);
 
         // Parse chunk header
-        let header = ChunkHeader::from_buff(axml_buff, ChunkType::ResTablePackageType)
-                     .expect("Error: cannot get chunk header for ResTablePackage");
+        let header = ChunkHeader::from_buff(axml_buff, ChunkType::ResTablePackageType)?;
 
         // Get other members
         let id = axml_buff.read_u32::<LittleEndian>()?;

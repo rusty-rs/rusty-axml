@@ -11,11 +11,17 @@ pub enum AxmlError {
     #[error("reading from the cursor of bytes")]
     IoError(#[from] std::io::Error),
     #[error("cannot decode string from UTF-16")]
-    StringDecodeError(#[from] std::char::DecodeUtf16Error),
+    Utf16DecodeError(#[from] std::char::DecodeUtf16Error),
+    #[error("cannot decode string from UTF-8")]
+    Utf8StrDecodeError(#[from] std::str::Utf8Error),
+    #[error("cannot decode string from UTF-8")]
+    Utf8StringDecodeError(#[from] std::string::FromUtf8Error),
     #[error("string not in the string pool")]
     StringPoolError,
     #[error("unknown namespace")]
     NamespaceError,
-    #[error("zip file error")]
-    ZipFileError(#[from] zip::result::ZipError)
+    #[error("Zip file error")]
+    ZipFileError(#[from] zip::result::ZipError),
+    #[error("XML encoding error")]
+    XmlEncodingError(#[from] quick_xml::Error),
 }

@@ -98,8 +98,7 @@ impl StringPool {
         let initial_offset = initial_offset as u32;
 
         // Parse chunk header
-        let header = ChunkHeader::from_buff(axml_buff, ChunkType::ResStringPoolType)
-                     .expect("Error: cannot get chunk header from string pool");
+        let header = ChunkHeader::from_buff(axml_buff, ChunkType::ResStringPoolType)?;
 
         // Get remaining members
         let string_count = axml_buff.read_u32::<LittleEndian>()?;
@@ -153,8 +152,7 @@ impl StringPool {
 
                 chunk.read_to_end(&mut str_buff)?;
                 // decoded_string = String::from_utf8(str_buff)?;
-                decoded_string = String::from_utf8(str_buff)
-                                 .expect("Error: cannot decode string, using raw");
+                decoded_string = String::from_utf8(str_buff)?;
             } else {
                 str_size = axml_buff.read_u16::<LittleEndian>()? as u32;
                 // TODO: can we get rid of this unwrap here?

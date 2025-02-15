@@ -38,8 +38,7 @@ impl ChunkHeader {
         let minimum_size = 8;
 
         // Get chunk type
-        let chunk_type = ChunkType::parse_block_type(axml_buff)
-                        .expect("Error: cannot parse block type");
+        let chunk_type = ChunkType::parse_block_type(axml_buff)?;
 
         // Check if this is indeed of the expected type
         if chunk_type != expected_type {

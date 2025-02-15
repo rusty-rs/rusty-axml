@@ -102,11 +102,10 @@ pub struct Axml {
 
 impl Axml {
     /// Write the whole parsed XML to a file
-    pub fn write_to_file(&self, file: &mut File) -> Result<(), Error> {
+    pub fn write_to_file(&self, file: &mut File) -> Result<(), AxmlError> {
         match self.to_string() {
             Ok(str_xml) => {
-                file.write_all(str_xml.as_bytes())
-                    .expect("Couldn't write to file");
+                file.write_all(str_xml.as_bytes())?;
                 Ok(())
             },
             Err(err) => { Err(err) }
@@ -114,17 +113,15 @@ impl Axml {
     }
 
     /// Convert the whole parsed XML into a string
-    pub fn to_string(&self) -> Result<String, Error> {
+    pub fn to_string(&self) -> Result<String, AxmlError> {
         let mut writer = Writer::new_with_indent(Vec::new(), b' ', 4);
 
         writer
-            .write_event(Event::Decl(BytesDecl::new("1.0", Some("utf-8"), None)))
-            .unwrap();
+            .write_event(Event::Decl(BytesDecl::new("1.0", Some("utf-8"), None)))?;
 
-        self.root.borrow().write_element(&mut writer).unwrap();
+        self.root.borrow().write_element(&mut writer)?;
 
-        let result = std::str::from_utf8(&writer.into_inner())
-            .expect("Failed to convert a slice of bytes to a string slice")
+        let result = std::str::from_utf8(&writer.into_inner())?
             .to_string();
 
         Ok(result)
@@ -182,8 +179,7 @@ pub fn parse_start_namespace(axml_buff: &mut Cursor<Vec<u8>>,
     axml_buff.set_position(offset - 2);
 
     // Parse chunk header
-    let _header = ChunkHeader::from_buff(axml_buff, ChunkType::ResXmlStartNamespaceType)
-                 .expect("Error: cannot get header from start namespace chunk");
+    let _header = ChunkHeader::from_buff(axml_buff, ChunkType::ResXmlStartNamespaceType)?;
 
     let _line_number = axml_buff.read_u32::<LittleEndian>()?;
     let _comment = axml_buff.read_u32::<LittleEndian>()?;
@@ -205,8 +201,7 @@ pub fn parse_end_namespace(axml_buff: &mut Cursor<Vec<u8>>,
     axml_buff.set_position(offset - 2);
 
     // Parse chunk header
-    let _header = ChunkHeader::from_buff(axml_buff, ChunkType::ResXmlEndNamespaceType)
-                 .expect("Error: cannot get header from start namespace chunk");
+    let _header = ChunkHeader::from_buff(axml_buff, ChunkType::ResXmlEndNamespaceType)?;
 
     let _line_number = axml_buff.read_u32::<LittleEndian>()?;
     let _comment = axml_buff.read_u32::<LittleEndian>()?;
@@ -225,8 +220,7 @@ pub fn parse_start_element(axml_buff: &mut Cursor<Vec<u8>>,
     axml_buff.set_position(offset - 2);
 
     // Parse chunk header
-    let _header = ChunkHeader::from_buff(axml_buff, ChunkType::ResXmlStartElementType)
-                 .expect("Error: cannot get header from start namespace chunk");
+    let _header = ChunkHeader::from_buff(axml_buff, ChunkType::ResXmlStartElementType)?;
 
     let _line_number = axml_buff.read_u32::<LittleEndian>()?;
     let _comment = axml_buff.read_u32::<LittleEndian>()?;
@@ -316,8 +310,7 @@ pub fn parse_end_element(axml_buff: &mut Cursor<Vec<u8>>,
     axml_buff.set_position(offset - 2);
 
     // Parse chunk header
-    let _header = ChunkHeader::from_buff(axml_buff, ChunkType::ResXmlEndElementType)
-                 .expect("Error: cannot get header from start namespace chunk");
+    let _header = ChunkHeader::from_buff(axml_buff, ChunkType::ResXmlEndElementType)?;
 
     let _line_number = axml_buff.read_u32::<LittleEndian>()?;
     let _comment = axml_buff.read_u32::<LittleEndian>()?;
