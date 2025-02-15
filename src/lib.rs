@@ -1,5 +1,6 @@
 pub mod parser;
 pub mod chunks;
+pub mod errors;
 
 use std::{
     fs,
@@ -104,7 +105,10 @@ pub fn create_cursor_from_axml(file_path: &str) -> Cursor<Vec<u8>> {
 /// [`create_cursor_from_axml`]: fn.create_cursor_from_axml.html
 /// [`create_cursor_from_apk`]: fn.create_cursor_from_apk.html
 pub fn parse_from_cursor(axml_cursor: Cursor<Vec<u8>>) -> Axml {
-    parser::parse_xml(axml_cursor)
+    match parser::parse_xml(axml_cursor) {
+        Ok(axml) => axml,
+        Err(err) => panic!("{err}")
+    }
 }
 
 /// Parses the AXML file from a string.
@@ -114,7 +118,10 @@ pub fn parse_from_cursor(axml_cursor: Cursor<Vec<u8>>) -> Axml {
 /// parsed XML document.
 pub fn parse_from_string(axml_str: &str) -> Axml {
     let axml_cursor = Cursor::new(Vec::from(axml_str.as_bytes()));
-    parser::parse_xml(axml_cursor)
+    match parser::parse_xml(axml_cursor) {
+        Ok(axml) => axml,
+        Err(err) => panic!("{err}")
+    }
 }
 
 /// Parses the AXML from a generic reader
@@ -135,7 +142,10 @@ where
     }
 
     let axml_cursor = Cursor::new(axml_vec);
-    parser::parse_xml(axml_cursor)
+    match parser::parse_xml(axml_cursor) {
+        Ok(axml) => axml,
+        Err(err) => panic!("{err}")
+    }
 }
 
 /// Use BFS tree traversal to get all element of a given type
