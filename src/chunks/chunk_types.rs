@@ -4,14 +4,13 @@
 //! along with helper methods to parse and display them.
 
 use std::fmt;
-use std::io::{
-    Error,
-    Cursor,
-};
+use std::io::Cursor;
 use byteorder::{
     LittleEndian,
     ReadBytesExt
 };
+
+use crate::errors::AxmlError;
 
 /* Type identifiers for chunks. Only includes the ones related to XML */
 #[derive(Clone, Copy, PartialEq, Debug)]
@@ -45,11 +44,8 @@ pub enum ChunkType {
 
 impl ChunkType {
     /// Attempt to parse the chunk type from a cursor of bytes
-    pub fn parse_block_type(buff: &mut Cursor<Vec<u8>>) -> Result<Self, Error> {
-        let raw_block_type = match buff.read_u16::<LittleEndian>() {
-            Ok(block) => block,
-            Err(e) => return Err(e),
-        };
+    pub fn parse_block_type(buff: &mut Cursor<Vec<u8>>) -> Result<Self, AxmlError> {
+        let raw_block_type = buff.read_u16::<LittleEndian>()?;
 
         let block_type = match raw_block_type {
             0x0000 => ChunkType::ResNullType,

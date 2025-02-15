@@ -1,11 +1,11 @@
 #![allow(dead_code)]
 
-use crate::chunks::data_value_type::DataValueType;
-
-use std::io::{
-    Error,
-    Cursor,
+use crate::{
+    chunks::data_value_type::DataValueType,
+    errors::AxmlError
 };
+
+use std::io:: Cursor;
 use byteorder::{
     LittleEndian,
     ReadBytesExt
@@ -28,16 +28,16 @@ pub struct ResValue {
 
 impl ResValue {
     /// Parse from a cursor of bytes
-    pub fn from_buff(axml_buff: &mut Cursor<Vec<u8>>) -> Result<Self, Error> {
-        let size = axml_buff.read_u16::<LittleEndian>().unwrap();
-        let res0 = axml_buff.read_u8().unwrap();
+    pub fn from_buff(axml_buff: &mut Cursor<Vec<u8>>) -> Result<Self, AxmlError> {
+        let size = axml_buff.read_u16::<LittleEndian>()?;
+        let res0 = axml_buff.read_u8()?;
 
         if res0 != 0 {
             panic!("res0 is not 0");
         }
 
-        let data_type = DataValueType::from_val(axml_buff.read_u8().unwrap());
-        let data = axml_buff.read_u32::<LittleEndian>().unwrap();
+        let data_type = DataValueType::from_val(axml_buff.read_u8()?);
+        let data = axml_buff.read_u32::<LittleEndian>()?;
 
         Ok(ResValue {
             size,

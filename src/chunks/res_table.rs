@@ -9,16 +9,16 @@
 //! Specific entries within a resource table can be uniquely identified
 //! with a single integer as defined by the ResTable_ref structure.
 
-use crate::chunks::{
-    chunk_header::ChunkHeader,
-    string_pool::StringPool,
-    chunk_types::ChunkType
+use crate::{
+    chunks::{
+        chunk_header::ChunkHeader,
+        chunk_types::ChunkType,
+        string_pool::StringPool
+    },
+    errors::AxmlError
 };
 
-use std::io::{
-    Error,
-    Cursor,
-};
+use std::io::Cursor;
 
 use byteorder::{
     LittleEndian,
@@ -36,25 +36,27 @@ pub struct ResTable {
 
 impl ResTable {
     /// Parse from a cursor of bytes
-    pub fn parse(axml_buff: &mut Cursor<Vec<u8>>) {
+    pub fn parse(axml_buff: &mut Cursor<Vec<u8>>) -> Result<Self, AxmlError> {
         // Go back 2 bytes, to account from the block type
         let initial_offset = axml_buff.position();
         axml_buff.set_position(initial_offset - 2);
 
         // Parse chunk header
-        let _header = ChunkHeader::from_buff(axml_buff, ChunkType::ResTableType)
+        let header = ChunkHeader::from_buff(axml_buff, ChunkType::ResTableType)
                      .expect("Error: cannot get chunk header from string pool");
 
         // Get package count
-        let package_count = axml_buff.read_u32::<LittleEndian>().unwrap();
+        let package_count = axml_buff.read_u32::<LittleEndian>()?;
 
         let mut strings = Vec::<String>::new();
+
+        // TODO: these are just ignored
         for _ in 0..package_count {
             let block_type = ChunkType::parse_block_type(axml_buff)
                             .expect("Error: cannot parse block type");
             match block_type {
                 ChunkType::ResStringPoolType => {
-                    StringPool::from_buff(axml_buff, &mut strings);
+                    StringPool::from_buff(axml_buff, &mut strings)?;
                 },
                 ChunkType::ResTablePackageType => {
                     ResTablePackage::parse(axml_buff)
@@ -63,6 +65,11 @@ impl ResTable {
                 _ => { panic!("######## Unexpected block type: {:02X}", block_type); }
             };
         }
+
+        Ok(Self {
+            header,
+            package_count
+        })
     }
 }
 
@@ -106,7 +113,7 @@ pub struct ResTablePackage {
 
 impl ResTablePackage {
     /// Parse from a cursor of bytes
-    pub fn parse(axml_buff: &mut Cursor<Vec<u8>>) -> Result<Self, Error> {
+    pub fn parse(axml_buff: &mut Cursor<Vec<u8>>) -> Result<Self, AxmlError> {
 
         // Go back 2 bytes, to account from the block type
         let initial_offset = axml_buff.position();
@@ -117,20 +124,20 @@ impl ResTablePackage {
                      .expect("Error: cannot get chunk header for ResTablePackage");
 
         // Get other members
-        let id = axml_buff.read_u32::<LittleEndian>().unwrap();
+        let id = axml_buff.read_u32::<LittleEndian>()?;
 
         let mut name: [u16; 128] = [0; 128];
         for i in 0..128 {
-            name[i] = axml_buff.read_u16::<LittleEndian>().unwrap();
+            name[i] = axml_buff.read_u16::<LittleEndian>()?;
             if name[i] == 0x00 {
                 break;
             }
         }
-        let type_strings = axml_buff.read_u32::<LittleEndian>().unwrap();
-        let last_public_type = axml_buff.read_u32::<LittleEndian>().unwrap();
-        let key_strings = axml_buff.read_u32::<LittleEndian>().unwrap();
-        let last_public_key = axml_buff.read_u32::<LittleEndian>().unwrap();
-        let type_id_offset = axml_buff.read_u32::<LittleEndian>().unwrap();
+        let type_strings = axml_buff.read_u32::<LittleEndian>()?;
+        let last_public_type = axml_buff.read_u32::<LittleEndian>()?;
+        let key_strings = axml_buff.read_u32::<LittleEndian>()?;
+        let last_public_key = axml_buff.read_u32::<LittleEndian>()?;
+        let type_id_offset = axml_buff.read_u32::<LittleEndian>()?;
 
         // Build and return the object
         Ok(ResTablePackage {

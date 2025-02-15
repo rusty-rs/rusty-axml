@@ -4,17 +4,17 @@
 //! The header is rather small and only contain the type of the chunk (identified
 //! by the `ChunkType` enum), the header size, and the chunk size.
 
-use std::io::{
-    Error,
-    Cursor,
-};
+use std::io::Cursor;
 
 use byteorder::{
     LittleEndian,
     ReadBytesExt,
 };
 
-use crate::chunks::chunk_types::ChunkType;
+use crate::{
+    chunks::chunk_types::ChunkType,
+    errors::AxmlError
+};
 
 /// Header that appears at the beginning of every chunk
 #[derive(Debug)]
@@ -33,7 +33,7 @@ pub struct ChunkHeader {
 
 impl ChunkHeader {
     /// Parse bytes from given buffer into a `ChunkHeader`
-    pub fn from_buff(axml_buff: &mut Cursor<Vec<u8>>, expected_type: ChunkType) -> Result<Self, Error> {
+    pub fn from_buff(axml_buff: &mut Cursor<Vec<u8>>, expected_type: ChunkType) -> Result<Self, AxmlError> {
         // Minimum size, for a chunk with no data
         let minimum_size = 8;
 
@@ -47,8 +47,8 @@ impl ChunkHeader {
         }
 
         // Get chunk header size and total size
-        let header_size = axml_buff.read_u16::<LittleEndian>().unwrap();
-        let chunk_size = axml_buff.read_u32::<LittleEndian>().unwrap();
+        let header_size = axml_buff.read_u16::<LittleEndian>()?;
+        let chunk_size = axml_buff.read_u32::<LittleEndian>()?;
 
         // Exhaustive checks on the announced sizes
         if header_size < minimum_size {

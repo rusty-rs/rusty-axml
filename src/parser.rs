@@ -345,14 +345,14 @@ pub fn parse_xml(mut axml_cursor: Cursor<Vec<u8>>) -> Result<Axml, AxmlError> {
         match block_type {
             ChunkType::ResNullType => continue,
             ChunkType::ResStringPoolType => {
-                let _ = StringPool::from_buff(&mut axml_cursor, &mut global_strings);
+                let _ = StringPool::from_buff(&mut axml_cursor, &mut global_strings)?;
             },
             ChunkType::ResTableType => {
-                ResTable::parse(&mut axml_cursor);
+                let _ = ResTable::parse(&mut axml_cursor)?;
             },
             ChunkType::ResXmlType => {
                 axml_cursor.set_position(axml_cursor.position() - 2);
-                let _ = ChunkHeader::from_buff(&mut axml_cursor, ChunkType::ResXmlType);
+                let _ = ChunkHeader::from_buff(&mut axml_cursor, ChunkType::ResXmlType)?;
             },
             ChunkType::ResXmlStartNamespaceType => {
                 parse_start_namespace(&mut axml_cursor, &global_strings, &mut namespace_prefixes)?;
@@ -378,7 +378,7 @@ pub fn parse_xml(mut axml_cursor: Cursor<Vec<u8>>) -> Result<Axml, AxmlError> {
             },
 
             ChunkType::ResXmlResourceMapType => {
-                let _ = ResourceMap::from_buff(&mut axml_cursor);
+                let _ = ResourceMap::from_buff(&mut axml_cursor)?;
             },
 
             _ => { },
