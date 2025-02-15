@@ -4,7 +4,6 @@
 //! representing the actual XML.
 
 use std::collections::HashMap;
-use std::borrow::Cow;
 use std::rc::Rc;
 use std::cell::RefCell;
 use std::io::{
@@ -20,9 +19,7 @@ use byteorder::{
 };
 
 use quick_xml::Writer;
-use quick_xml::events::{BytesDecl, BytesEnd, BytesStart, Event};
-use quick_xml::events::attributes::Attribute;
-use quick_xml::name::QName;
+use quick_xml::events::{BytesDecl, Event};
 
 use crate::errors::AxmlError;
 use crate::{
@@ -329,51 +326,6 @@ pub fn parse_end_element(axml_buff: &mut Cursor<Vec<u8>>,
 
     let name = strings.get(name as usize).ok_or(AxmlError::StringPoolError)?;
     Ok(name.to_string())
-}
-
-/// Handler for XML events
-pub fn handle_event<T> (writer: &mut Writer<T>,
-                        element_name: String,
-                        element_attrs: Vec<(String, String)>,
-                        namespace_prefixes: &HashMap::<String, String>,
-                        block_type: ChunkType) where T: std::io::Write {
-    match block_type {
-        ChunkType::ResXmlStartElementType => {
-            // let mut elem = BytesStart::from_content(element_name.as_bytes(), element_name.len());
-            let mut elem = BytesStart::new(&element_name);
-
-            if element_name == "manifest" {
-                for (k, v) in namespace_prefixes.iter() {
-                    if v == "android" {
-                        let mut key = String::new();
-                        key.push_str("xmlns:");
-                        key.push_str(v);
-                        let attr = Attribute {
-                            key: QName(key.as_bytes()),
-                            value: Cow::Borrowed(k.as_bytes())
-                        };
-                        elem.push_attribute(attr);
-                        break;
-                    }
-                }
-            }
-
-            for (attr_key, attr_val) in element_attrs {
-                let attr = Attribute {
-                    key: QName(attr_key.as_bytes()),
-                    value: Cow::Borrowed(attr_val.as_bytes())
-                };
-                elem.push_attribute(attr);
-            }
-
-            assert!(writer.write_event(Event::Start(elem)).is_ok());
-
-        },
-        ChunkType::ResXmlEndElementType => {
-            assert!(writer.write_event(Event::End(BytesEnd::new(element_name))).is_ok());
-        },
-        _ => println!("{:02X}, other", block_type),
-    }
 }
 
 /// Parse a whole XML document
