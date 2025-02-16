@@ -119,14 +119,14 @@ where
 }
 
 /// Return all elements of the given type
-pub fn find_elements_by_type(axml: &Axml, element_type: &str) -> Vec<XmlNode> {
+pub fn find_nodes_by_type(axml: &Axml, element_type: &str) -> Vec<XmlNode> {
     axml.iter()
         .filter(|element| element.borrow().element_type() == element_type)
         .collect()
 }
 
 /// Returns an `XmlNode` if it exists
-pub fn find_node(axml: &Axml, node_name: &str) -> Option<XmlNode> {
+pub fn find_node_by_name(axml: &Axml, node_name: &str) -> Option<XmlNode> {
     let name = node_name.to_string();
 
     // Component names are unique so after filter there will either be zero or one element
@@ -191,7 +191,7 @@ fn is_component_exposed(component: &XmlNode) -> bool {
 ///
 /// This is only valid for APK manifest files and will return an empty vector otherwise
 pub fn get_activities_names(parsed_xml: &Axml) -> Vec<String> {
-    find_elements_by_type(parsed_xml, "activity")
+    find_nodes_by_type(parsed_xml, "activity")
         .into_iter()
         .filter(|element| element.borrow().get_name().is_some())
         .map(|element| element.borrow().get_name().unwrap().to_string())
@@ -202,7 +202,7 @@ pub fn get_activities_names(parsed_xml: &Axml) -> Vec<String> {
 ///
 /// This is only valid for APK manifest files and will return an empty vector otherwise
 pub fn get_services_names(parsed_xml: &Axml) -> Vec<String> {
-    find_elements_by_type(parsed_xml, "service")
+    find_nodes_by_type(parsed_xml, "service")
         .into_iter()
         .filter(|element| element.borrow().get_name().is_some())
         .map(|element| element.borrow().get_name().unwrap().to_string())
@@ -213,7 +213,7 @@ pub fn get_services_names(parsed_xml: &Axml) -> Vec<String> {
 ///
 /// This is only valid for APK manifest files and will return an empty vector otherwise
 pub fn get_providers_names(parsed_xml: &Axml) -> Vec<String> {
-    find_elements_by_type(parsed_xml, "provider")
+    find_nodes_by_type(parsed_xml, "provider")
         .into_iter()
         .filter(|element| element.borrow().get_name().is_some())
         .map(|element| element.borrow().get_name().unwrap().to_string())
@@ -224,7 +224,7 @@ pub fn get_providers_names(parsed_xml: &Axml) -> Vec<String> {
 ///
 /// This is only valid for APK manifest files and will return an empty vector otherwise
 pub fn get_receivers_names(parsed_xml: &Axml) -> Vec<String> {
-    find_elements_by_type(parsed_xml, "receiver")
+    find_nodes_by_type(parsed_xml, "receiver")
         .into_iter()
         .filter(|element| element.borrow().get_name().is_some())
         .map(|element| element.borrow().get_name().unwrap().to_string())
@@ -235,7 +235,7 @@ pub fn get_receivers_names(parsed_xml: &Axml) -> Vec<String> {
 ///
 /// This is only valid for APK manifest files and will return an empty vector otherwise.
 pub fn get_declared_permissions(parsed_xml: &Axml) -> Vec<String> {
-    find_elements_by_type(parsed_xml, "permission")
+    find_nodes_by_type(parsed_xml, "permission")
         .into_iter()
         .filter(|element| element.borrow().get_name().is_some())
         .map(|element| element.borrow().get_name().unwrap().to_string())
@@ -247,7 +247,7 @@ pub fn get_declared_permissions(parsed_xml: &Axml) -> Vec<String> {
 /// This is only valid for APK manifest files and will return an empty vector otherwise. This also
 /// does not include permissions requested from within components.
 pub fn get_requested_permissions(parsed_xml: &Axml) -> Vec<String> {
-    find_elements_by_type(parsed_xml, "uses-permission")
+    find_nodes_by_type(parsed_xml, "uses-permission")
         .into_iter()
         .filter(|element| element.borrow().get_name().is_some())
         .map(|element| element.borrow().get_name().unwrap().to_string())
@@ -260,7 +260,7 @@ pub fn get_requested_permissions(parsed_xml: &Axml) -> Vec<String> {
 /// state of all the components in the app
 pub fn get_exposed_components(parsed_xml: &Axml) -> Option<HashMap<String, Vec<XmlNode>>> {
     // Checking if the `<application>` tag has the `enabled` attribute set to `false`
-    let application = find_elements_by_type(parsed_xml, "application").pop()?;
+    let application = find_nodes_by_type(parsed_xml, "application").pop()?;
     if let Some(enabled) = application.borrow().get_attr("android:enabled") {
         if enabled == "false" {
             return None;
@@ -271,28 +271,28 @@ pub fn get_exposed_components(parsed_xml: &Axml) -> Option<HashMap<String, Vec<X
 
     components.insert(
         String::from("activity"),
-        find_elements_by_type(parsed_xml, "activity")
+        find_nodes_by_type(parsed_xml, "activity")
                 .into_iter()
                 .filter(is_component_exposed)
                 .collect()
     );
     components.insert(
         String::from("service"),
-        find_elements_by_type(parsed_xml, "service")
+        find_nodes_by_type(parsed_xml, "service")
                 .into_iter()
                 .filter(is_component_exposed)
                 .collect()
     );
     components.insert(
         String::from("provider"),
-        find_elements_by_type(parsed_xml, "provider")
+        find_nodes_by_type(parsed_xml, "provider")
                 .into_iter()
                 .filter(is_component_exposed)
                 .collect()
     );
     components.insert(
         String::from("receiver"),
-        find_elements_by_type(parsed_xml, "receiver")
+        find_nodes_by_type(parsed_xml, "receiver")
                 .into_iter()
                 .filter(is_component_exposed)
                 .collect()
