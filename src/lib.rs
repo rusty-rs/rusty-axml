@@ -10,11 +10,8 @@ use std::io::{
     Read,
     Cursor,
 };
-use std::rc::Rc;
-use std::cell::RefCell;
 
-use errors::AxmlError;
-
+use crate::errors::AxmlError;
 use crate::chunks::{
     resource_map::ResourceMap,
     res_table::ResTable,
@@ -202,7 +199,7 @@ fn is_component_exposed(component: &XmlNode) -> bool {
 /// state of all the components in the app
 pub fn get_exposed_components(parsed_xml: &Axml) -> Option<HashMap<String, Vec<XmlNode>>> {
     // Checking if the `<application>` tag has the `enabled` attribute set to `false`
-    let application = find_elements_by_type(&parsed_xml, "application").pop()?;
+    let application = find_elements_by_type(parsed_xml, "application").pop()?;
     if let Some(enabled) = application.borrow().get_attr("android:enabled") {
         if enabled == "false" {
             return None;
@@ -213,28 +210,28 @@ pub fn get_exposed_components(parsed_xml: &Axml) -> Option<HashMap<String, Vec<X
 
     components.insert(
         String::from("activity"),
-        find_elements_by_type(&parsed_xml, "activity")
+        find_elements_by_type(parsed_xml, "activity")
                 .into_iter()
                 .filter(is_component_exposed)
                 .collect()
     );
     components.insert(
         String::from("service"),
-        find_elements_by_type(&parsed_xml, "service")
+        find_elements_by_type(parsed_xml, "service")
                 .into_iter()
                 .filter(is_component_exposed)
                 .collect()
     );
     components.insert(
         String::from("provider"),
-        find_elements_by_type(&parsed_xml, "provider")
+        find_elements_by_type(parsed_xml, "provider")
                 .into_iter()
                 .filter(is_component_exposed)
                 .collect()
     );
     components.insert(
         String::from("receiver"),
-        find_elements_by_type(&parsed_xml, "receiver")
+        find_elements_by_type(parsed_xml, "receiver")
                 .into_iter()
                 .filter(is_component_exposed)
                 .collect()
