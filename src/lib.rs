@@ -192,7 +192,7 @@ fn is_component_exposed(component: &XmlNode) -> bool {
 ///
 /// This is only valid for APK manifest files and will return an empty vector otherwise
 pub fn get_activities_names(parsed_xml: &Axml) -> Vec<String> {
-    find_elements_by_type(parsed_xml, "activities")
+    find_elements_by_type(parsed_xml, "activity")
         .into_iter()
         .filter(|element| element.borrow().get_name().is_some())
         .map(|element| element.borrow().get_name().unwrap().clone())
@@ -203,7 +203,7 @@ pub fn get_activities_names(parsed_xml: &Axml) -> Vec<String> {
 ///
 /// This is only valid for APK manifest files and will return an empty vector otherwise
 pub fn get_services_names(parsed_xml: &Axml) -> Vec<String> {
-    find_elements_by_type(parsed_xml, "services")
+    find_elements_by_type(parsed_xml, "service")
         .into_iter()
         .filter(|element| element.borrow().get_name().is_some())
         .map(|element| element.borrow().get_name().unwrap().clone())
@@ -214,7 +214,7 @@ pub fn get_services_names(parsed_xml: &Axml) -> Vec<String> {
 ///
 /// This is only valid for APK manifest files and will return an empty vector otherwise
 pub fn get_providers_names(parsed_xml: &Axml) -> Vec<String> {
-    find_elements_by_type(parsed_xml, "providers")
+    find_elements_by_type(parsed_xml, "provider")
         .into_iter()
         .filter(|element| element.borrow().get_name().is_some())
         .map(|element| element.borrow().get_name().unwrap().clone())
@@ -225,7 +225,7 @@ pub fn get_providers_names(parsed_xml: &Axml) -> Vec<String> {
 ///
 /// This is only valid for APK manifest files and will return an empty vector otherwise
 pub fn get_receivers_names(parsed_xml: &Axml) -> Vec<String> {
-    find_elements_by_type(parsed_xml, "receivers")
+    find_elements_by_type(parsed_xml, "receiver")
         .into_iter()
         .filter(|element| element.borrow().get_name().is_some())
         .map(|element| element.borrow().get_name().unwrap().clone())
