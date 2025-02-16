@@ -22,23 +22,6 @@ use crate::parser::{
     XmlNode
 };
 
-/// Representation of an app's manifest contents
-#[derive(Debug, Default)]
-pub struct ManifestContents {
-    pub pkg_name: String,
-
-    pub activities: Vec<String>,
-    pub services: Vec<String>,
-    pub providers: Vec<String>,
-    pub receivers: Vec<String>,
-
-    // TODO: does not includes permissions requested from within components
-    pub created_perms: Vec<String>,
-    pub requested_perms: Vec<String>,
-
-    pub main_entry_point: Option<String>,
-}
-
 /// A component can be exported or enabled. Each of these feature have default values
 /// but these default values can be overriden by the developer. This means they have
 /// essentially four states:
