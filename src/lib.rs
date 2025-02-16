@@ -132,8 +132,7 @@ pub fn find_node(axml: &Axml, node_name: &str) -> Option<XmlNode> {
     // Component names are unique so after filter there will either be zero or one element
     // Calling next() will either yield the component or `None`
     axml.iter()
-        .filter(|element| element.borrow().get_name() == Some(&name))
-        .next()
+        .find(|element| element.borrow().get_name() == Some(&name))
 }
 
 /// Check if a component is exposed which is the case if it is both enabled and exported
@@ -195,7 +194,7 @@ pub fn get_activities_names(parsed_xml: &Axml) -> Vec<String> {
     find_elements_by_type(parsed_xml, "activity")
         .into_iter()
         .filter(|element| element.borrow().get_name().is_some())
-        .map(|element| element.borrow().get_name().unwrap().clone())
+        .map(|element| element.borrow().get_name().unwrap().to_string())
         .collect()
 }
 
@@ -206,7 +205,7 @@ pub fn get_services_names(parsed_xml: &Axml) -> Vec<String> {
     find_elements_by_type(parsed_xml, "service")
         .into_iter()
         .filter(|element| element.borrow().get_name().is_some())
-        .map(|element| element.borrow().get_name().unwrap().clone())
+        .map(|element| element.borrow().get_name().unwrap().to_string())
         .collect()
 }
 
@@ -217,7 +216,7 @@ pub fn get_providers_names(parsed_xml: &Axml) -> Vec<String> {
     find_elements_by_type(parsed_xml, "provider")
         .into_iter()
         .filter(|element| element.borrow().get_name().is_some())
-        .map(|element| element.borrow().get_name().unwrap().clone())
+        .map(|element| element.borrow().get_name().unwrap().to_string())
         .collect()
 }
 
@@ -228,7 +227,7 @@ pub fn get_receivers_names(parsed_xml: &Axml) -> Vec<String> {
     find_elements_by_type(parsed_xml, "receiver")
         .into_iter()
         .filter(|element| element.borrow().get_name().is_some())
-        .map(|element| element.borrow().get_name().unwrap().clone())
+        .map(|element| element.borrow().get_name().unwrap().to_string())
         .collect()
 }
 
@@ -239,7 +238,7 @@ pub fn get_declared_permissions(parsed_xml: &Axml) -> Vec<String> {
     find_elements_by_type(parsed_xml, "permission")
         .into_iter()
         .filter(|element| element.borrow().get_name().is_some())
-        .map(|element| element.borrow().get_name().unwrap().clone())
+        .map(|element| element.borrow().get_name().unwrap().to_string())
         .collect()
 }
 
@@ -251,7 +250,7 @@ pub fn get_requested_permissions(parsed_xml: &Axml) -> Vec<String> {
     find_elements_by_type(parsed_xml, "uses-permission")
         .into_iter()
         .filter(|element| element.borrow().get_name().is_some())
-        .map(|element| element.borrow().get_name().unwrap().clone())
+        .map(|element| element.borrow().get_name().unwrap().to_string())
         .collect()
 }
 
