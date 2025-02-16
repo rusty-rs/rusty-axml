@@ -39,11 +39,11 @@ use crate::chunks::{
 #[derive(Debug)]
 pub struct XmlElement {
     /// Type of element (e.g., `activity`, `service`)
-    pub element_type: String,
+    element_type: String,
     /// Attributes of the element (e.g., `exported`, `permission`)
-    pub attributes: HashMap<String, String>,
+    attributes: HashMap<String, String>,
     /// Vector of children of the XML element
-    pub children: Vec<XmlNode>
+    children: Vec<XmlNode>
 }
 
 impl XmlElement {
@@ -79,6 +79,21 @@ impl XmlElement {
         Ok(())
     }
 
+    /// Get the element's type
+    pub fn element_type(&self) -> &str {
+        &self.element_type
+    }
+
+    /// Get the element's children
+    pub fn children(&self) -> &[XmlNode] {
+        &self.children
+    }
+
+    /// Get the element's attributes
+    pub fn attributes(&self) -> &HashMap<String, String> {
+        &self.attributes
+    }
+
     /// Get the element's name off of its attributes if it exists
     pub fn get_name(&self) -> Option<&String> {
         self.attributes.get("android:name")
@@ -97,7 +112,7 @@ pub type XmlNode = Rc<RefCell<XmlElement>>;
 #[derive(Debug)]
 pub struct Axml {
     /// Root of the XML doc
-    pub root: XmlNode,
+    root: XmlNode,
 }
 
 impl Axml {
@@ -125,6 +140,11 @@ impl Axml {
             .to_string();
 
         Ok(result)
+    }
+
+    /// Get a reference to the root of the AXML document
+    pub fn root(&self) -> &XmlNode {
+        &self.root
     }
 
     /// Returns a non-consuming iterator over the AXML doc elements
@@ -211,7 +231,7 @@ pub fn parse_end_namespace(axml_buff: &mut Cursor<Vec<u8>>,
     Ok(())
 }
 
-/// Parser the start of an element
+/// Parse the start of an element
 pub fn parse_start_element(axml_buff: &mut Cursor<Vec<u8>>,
                            strings: &[String],
                            namespace_prefixes: &HashMap::<String, String>) -> Result<XmlElement, AxmlError> {
@@ -302,7 +322,7 @@ pub fn parse_start_element(axml_buff: &mut Cursor<Vec<u8>>,
     })
 }
 
-/// Parser the end of an element
+/// Parse the end of an element
 pub fn parse_end_element(axml_buff: &mut Cursor<Vec<u8>>,
                          strings: &[String]) -> Result<String, AxmlError> {
     // Go back 2 bytes, to account from the block type
