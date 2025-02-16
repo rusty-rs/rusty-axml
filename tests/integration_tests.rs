@@ -45,7 +45,7 @@ fn test_component() {
     let cursor = rusty_axml::create_cursor_from_axml("tests/assets/AndroidManifest.xml").unwrap();
     let axml = rusty_axml::parse_from_cursor(cursor).unwrap();
 
-    let service = rusty_axml::find_node(&axml, "edu.berkeley.icsi.haystack.services.LocalVpnService").unwrap();
+    let service = rusty_axml::find_node_by_name(&axml, "edu.berkeley.icsi.haystack.services.LocalVpnService").unwrap();
     let service = service.borrow();
 
     assert_eq!(service.get_attr("android:permission"), Some("android.permission.BIND_VPN_SERVICE"));
@@ -59,4 +59,17 @@ fn test_component() {
     let action = filter.children().first().unwrap().clone();
     let action = action.borrow();
     assert_eq!(action.get_name(), Some("android.net.VpnService"));
+}
+
+#[test]
+fn test_manifest_attributes() {
+    let cursor = rusty_axml::create_cursor_from_axml("tests/assets/AndroidManifest.xml").unwrap();
+    let axml = rusty_axml::parse_from_cursor(cursor).unwrap();
+
+    let node  = rusty_axml::find_nodes_by_type(&axml, "manifest").into_iter().next().unwrap();
+    let node = node.borrow();
+
+    assert_eq!(node.get_attr("package"), Some("edu.berkeley.icsi.haystack"));
+    assert_eq!(node.get_attr("android:versionName"), Some("2.2"));
+    assert_eq!(node.get_attr("android:versionCode"), Some("203"));
 }
