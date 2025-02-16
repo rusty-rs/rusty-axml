@@ -39,3 +39,24 @@ fn test_from_axml() {
     let axml = rusty_axml::parse_from_cursor(cursor).unwrap();
     test_manifest_contents(&axml);
 }
+
+#[test]
+fn test_component() {
+    let cursor = rusty_axml::create_cursor_from_axml("tests/assets/AndroidManifest.xml").unwrap();
+    let axml = rusty_axml::parse_from_cursor(cursor).unwrap();
+
+    let service = rusty_axml::find_node(&axml, "edu.berkeley.icsi.haystack.services.LocalVpnService").unwrap();
+    let service = service.borrow();
+
+    assert_eq!(service.get_attr("android:permission"), Some("android.permission.BIND_VPN_SERVICE"));
+    assert_eq!(service.children().len(), 1);
+
+    let filter = service.children().first().unwrap().clone();
+    let filter = filter.borrow();
+    assert_eq!(filter.element_type(), "intent-filter");
+    assert_eq!(filter.children().len(), 1);
+
+    let action = filter.children().first().unwrap().clone();
+    let action = action.borrow();
+    assert_eq!(action.get_name(), Some("android.net.VpnService"));
+}
