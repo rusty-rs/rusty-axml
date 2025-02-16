@@ -231,7 +231,7 @@ pub fn parse_end_namespace(axml_buff: &mut Cursor<Vec<u8>>,
     Ok(())
 }
 
-/// Parser the start of an element
+/// Parse the start of an element
 pub fn parse_start_element(axml_buff: &mut Cursor<Vec<u8>>,
                            strings: &[String],
                            namespace_prefixes: &HashMap::<String, String>) -> Result<XmlElement, AxmlError> {
@@ -322,7 +322,7 @@ pub fn parse_start_element(axml_buff: &mut Cursor<Vec<u8>>,
     })
 }
 
-/// Parser the end of an element
+/// Parse the end of an element
 pub fn parse_end_element(axml_buff: &mut Cursor<Vec<u8>>,
                          strings: &[String]) -> Result<String, AxmlError> {
     // Go back 2 bytes, to account from the block type

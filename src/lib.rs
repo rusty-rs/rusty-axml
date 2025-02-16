@@ -22,7 +22,7 @@ use crate::chunks::{
 };
 use crate::parser::{
     Axml,
-    XmlElement
+    XmlNode
 };
 
 /// Representation of an app's manifest contents
@@ -139,23 +139,10 @@ where
 }
 
 /// Use BFS tree traversal to get all element of a given type
-///
-/// TODO: use Axml type here instead
-fn find_elements_by_type(parsed_xml: &Rc<RefCell<XmlElement>>, element_type: &str) -> Vec<Rc<RefCell<XmlElement>>> {
-    let mut result = Vec::new();
-    let mut stack = vec![Rc::clone(parsed_xml)];
-
-    while let Some(element) = stack.pop() {
-        let borrowed = element.borrow();
-        if borrowed.element_type() == element_type {
-            result.push(Rc::clone(&element));
-        }
-        for child in borrowed.children() {
-            stack.push(Rc::clone(child));
-        }
-    }
-
-    result
+fn find_elements_by_type(axml: &Axml, element_type: &str) -> Vec<XmlNode> {
+    axml.iter()
+        .filter(|element| element.borrow().element_type() == element_type)
+        .collect()
 }
 
 /// Check if a component is exposed which is the case if it is both enabled and exported
@@ -164,7 +151,7 @@ fn find_elements_by_type(parsed_xml: &Rc<RefCell<XmlElement>>, element_type: &st
 /// The default state depends on the presence or not of intent filters: if there is an intent
 /// filter, the assumption is that the compoennt is meants to be available to other apps, and so it
 /// is exported by default, otherwise not.
-fn is_component_exposed(component: &Rc<RefCell<XmlElement>>) -> bool {
+fn is_component_exposed(component: &XmlNode) -> bool {
     let mut _enabled_state = ComponentState::DefaultTrue;
     let mut exported_state = ComponentState::Unknown;
 
@@ -213,7 +200,7 @@ fn is_component_exposed(component: &Rc<RefCell<XmlElement>>) -> bool {
 /// Parse an app's manifest and get the list of exposed components
 /// We first check if the app has the `android:enabled` component set, which would influence the
 /// state of all the components in the app
-pub fn get_exposed_components(parsed_xml: Rc<RefCell<XmlElement>>) -> Option<HashMap<String, Vec<Rc<RefCell<XmlElement>>>>> {
+pub fn get_exposed_components(parsed_xml: &Axml) -> Option<HashMap<String, Vec<XmlNode>>> {
     // Checking if the `<application>` tag has the `enabled` attribute set to `false`
     let application = find_elements_by_type(&parsed_xml, "application").pop()?;
     if let Some(enabled) = application.borrow().get_attr("android:enabled") {
