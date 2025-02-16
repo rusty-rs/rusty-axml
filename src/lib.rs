@@ -118,11 +118,22 @@ where
     parser::parse_xml(axml_cursor)
 }
 
-/// Use BFS tree traversal to get all element of a given type
-fn find_elements_by_type(axml: &Axml, element_type: &str) -> Vec<XmlNode> {
+/// Return all elements of the given type
+pub fn find_elements_by_type(axml: &Axml, element_type: &str) -> Vec<XmlNode> {
     axml.iter()
         .filter(|element| element.borrow().element_type() == element_type)
         .collect()
+}
+
+/// Returns an `XmlNode` if it exists
+pub fn find_node(axml: &Axml, node_name: &str) -> Option<XmlNode> {
+    let name = node_name.to_string();
+
+    // Component names are unique so after filter there will either be zero or one element
+    // Calling next() will either yield the component or `None`
+    axml.iter()
+        .filter(|element| element.borrow().get_name() == Some(&name))
+        .next()
 }
 
 /// Check if a component is exposed which is the case if it is both enabled and exported
@@ -177,7 +188,52 @@ fn is_component_exposed(component: &XmlNode) -> bool {
     }
 }
 
+/// Get the list of activities names
+///
+/// This is only valid for APK manifest files and will return an empty vector otherwise
+pub fn get_activities_names(parsed_xml: &Axml) -> Vec<String> {
+    find_elements_by_type(parsed_xml, "activities")
+        .into_iter()
+        .filter(|element| element.borrow().get_name().is_some())
+        .map(|element| element.borrow().get_name().unwrap().clone())
+        .collect()
+}
+
+/// Get the list of services names
+///
+/// This is only valid for APK manifest files and will return an empty vector otherwise
+pub fn get_services_names(parsed_xml: &Axml) -> Vec<String> {
+    find_elements_by_type(parsed_xml, "services")
+        .into_iter()
+        .filter(|element| element.borrow().get_name().is_some())
+        .map(|element| element.borrow().get_name().unwrap().clone())
+        .collect()
+}
+
+/// Get the list of providers names
+///
+/// This is only valid for APK manifest files and will return an empty vector otherwise
+pub fn get_providers_names(parsed_xml: &Axml) -> Vec<String> {
+    find_elements_by_type(parsed_xml, "providers")
+        .into_iter()
+        .filter(|element| element.borrow().get_name().is_some())
+        .map(|element| element.borrow().get_name().unwrap().clone())
+        .collect()
+}
+
+/// Get the list of receivers names
+///
+/// This is only valid for APK manifest files and will return an empty vector otherwise
+pub fn get_receivers_names(parsed_xml: &Axml) -> Vec<String> {
+    find_elements_by_type(parsed_xml, "receivers")
+        .into_iter()
+        .filter(|element| element.borrow().get_name().is_some())
+        .map(|element| element.borrow().get_name().unwrap().clone())
+        .collect()
+}
+
 /// Parse an app's manifest and get the list of exposed components
+///
 /// We first check if the app has the `android:enabled` component set, which would influence the
 /// state of all the components in the app
 pub fn get_exposed_components(parsed_xml: &Axml) -> Option<HashMap<String, Vec<XmlNode>>> {
