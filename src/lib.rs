@@ -232,6 +232,29 @@ pub fn get_receivers_names(parsed_xml: &Axml) -> Vec<String> {
         .collect()
 }
 
+/// Get the list of declared permissions
+///
+/// This is only valid for APK manifest files and will return an empty vector otherwise.
+pub fn get_declared_permissions(parsed_xml: &Axml) -> Vec<String> {
+    find_elements_by_type(parsed_xml, "permission")
+        .into_iter()
+        .filter(|element| element.borrow().get_name().is_some())
+        .map(|element| element.borrow().get_name().unwrap().clone())
+        .collect()
+}
+
+/// Get the list of requested permissions
+///
+/// This is only valid for APK manifest files and will return an empty vector otherwise. This also
+/// does not include permissions requested from within components.
+pub fn get_requested_permissions(parsed_xml: &Axml) -> Vec<String> {
+    find_elements_by_type(parsed_xml, "uses-permission")
+        .into_iter()
+        .filter(|element| element.borrow().get_name().is_some())
+        .map(|element| element.borrow().get_name().unwrap().clone())
+        .collect()
+}
+
 /// Parse an app's manifest and get the list of exposed components
 ///
 /// We first check if the app has the `android:enabled` component set, which would influence the
