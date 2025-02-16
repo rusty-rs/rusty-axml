@@ -147,10 +147,10 @@ fn find_elements_by_type(parsed_xml: &Rc<RefCell<XmlElement>>, element_type: &st
 
     while let Some(element) = stack.pop() {
         let borrowed = element.borrow();
-        if borrowed.element_type == element_type {
+        if borrowed.element_type() == element_type {
             result.push(Rc::clone(&element));
         }
-        for child in &borrowed.children {
+        for child in borrowed.children() {
             stack.push(Rc::clone(child));
         }
     }
@@ -168,7 +168,7 @@ fn is_component_exposed(component: &Rc<RefCell<XmlElement>>) -> bool {
     let mut _enabled_state = ComponentState::DefaultTrue;
     let mut exported_state = ComponentState::Unknown;
 
-    if let Some(enabled) = component.borrow().attributes.get("android:enabled") {
+    if let Some(enabled) = component.borrow().get_attr("android:enabled") {
         if enabled == "false" {
             return false;
         } else {
@@ -176,7 +176,7 @@ fn is_component_exposed(component: &Rc<RefCell<XmlElement>>) -> bool {
         }
     }
 
-    if let Some(exported) = component.borrow().attributes.get("android:exported") {
+    if let Some(exported) = component.borrow().get_attr("android:exported") {
         if exported == "false" {
             return false;
         } else {
@@ -188,8 +188,8 @@ fn is_component_exposed(component: &Rc<RefCell<XmlElement>>) -> bool {
     // `false`. This is not the case for content providers though, which usually have explicit
     // values anyway.
     if exported_state == ComponentState::Unknown {
-        for item in component.borrow().children.iter() {
-            if item.borrow().element_type == "intent-filter" {
+        for item in component.borrow().children().iter() {
+            if item.borrow().element_type() == "intent-filter" {
                 exported_state = ComponentState::DefaultTrue;
                 break;
             }
@@ -216,7 +216,7 @@ fn is_component_exposed(component: &Rc<RefCell<XmlElement>>) -> bool {
 pub fn get_exposed_components(parsed_xml: Rc<RefCell<XmlElement>>) -> Option<HashMap<String, Vec<Rc<RefCell<XmlElement>>>>> {
     // Checking if the `<application>` tag has the `enabled` attribute set to `false`
     let application = find_elements_by_type(&parsed_xml, "application").pop()?;
-    if let Some(enabled) = application.borrow().attributes.get("android:enabled") {
+    if let Some(enabled) = application.borrow().get_attr("android:enabled") {
         if enabled == "false" {
             return None;
         }

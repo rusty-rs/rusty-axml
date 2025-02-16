@@ -39,11 +39,11 @@ use crate::chunks::{
 #[derive(Debug)]
 pub struct XmlElement {
     /// Type of element (e.g., `activity`, `service`)
-    pub element_type: String,
+    element_type: String,
     /// Attributes of the element (e.g., `exported`, `permission`)
-    pub attributes: HashMap<String, String>,
+    attributes: HashMap<String, String>,
     /// Vector of children of the XML element
-    pub children: Vec<XmlNode>
+    children: Vec<XmlNode>
 }
 
 impl XmlElement {
@@ -77,6 +77,21 @@ impl XmlElement {
         }
 
         Ok(())
+    }
+
+    /// Get the element's type
+    pub fn element_type(&self) -> &str {
+        &self.element_type
+    }
+
+    /// Get the element's children
+    pub fn children(&self) -> &[XmlNode] {
+        &self.children
+    }
+
+    /// Get the element's attributes
+    pub fn attributes(&self) -> &HashMap<String, String> {
+        &self.attributes
     }
 
     /// Get the element's name off of its attributes if it exists
