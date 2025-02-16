@@ -112,7 +112,7 @@ pub type XmlNode = Rc<RefCell<XmlElement>>;
 #[derive(Debug)]
 pub struct Axml {
     /// Root of the XML doc
-    pub root: XmlNode,
+    root: XmlNode,
 }
 
 impl Axml {
@@ -140,6 +140,11 @@ impl Axml {
             .to_string();
 
         Ok(result)
+    }
+
+    /// Get a reference to the root of the AXML document
+    pub fn root(&self) -> &XmlNode {
+        &self.root
     }
 
     /// Returns a non-consuming iterator over the AXML doc elements
