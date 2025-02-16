@@ -95,13 +95,21 @@ impl XmlElement {
     }
 
     /// Get the element's name off of its attributes if it exists
-    pub fn get_name(&self) -> Option<&String> {
-        self.attributes.get("android:name")
+    pub fn get_name(&self) -> Option<&str> {
+        if let Some(attr) = self.attributes.get("android:name") {
+            return Some(attr);
+        }
+
+        None
     }
 
     /// Get an attribute from an `XmlElement` if it exists
-    pub fn get_attr(&self, attr_name: &str) -> Option<&String> {
-        self.attributes.get(attr_name)
+    pub fn get_attr(&self, attr_name: &str) -> Option<&str> {
+        if let Some(attr) = self.attributes.get(attr_name) {
+            return Some(attr);
+        }
+
+        None
     }
 }
 
