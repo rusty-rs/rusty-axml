@@ -95,13 +95,21 @@ impl XmlElement {
     }
 
     /// Get the element's name off of its attributes if it exists
-    pub fn get_name(&self) -> Option<&String> {
-        self.attributes.get("android:name")
+    pub fn get_name(&self) -> Option<&str> {
+        if let Some(attr) = self.attributes.get("android:name") {
+            return Some(attr);
+        }
+
+        None
     }
 
     /// Get an attribute from an `XmlElement` if it exists
-    pub fn get_attr(&self, attr_name: &str) -> Option<&String> {
-        self.attributes.get(attr_name)
+    pub fn get_attr(&self, attr_name: &str) -> Option<&str> {
+        if let Some(attr) = self.attributes.get(attr_name) {
+            return Some(attr);
+        }
+
+        None
     }
 }
 
@@ -346,13 +354,13 @@ pub fn parse_xml(mut axml_cursor: Cursor<Vec<u8>>) -> Result<Axml, AxmlError> {
     let mut global_strings = Vec::new();
     let mut namespace_prefixes = HashMap::<String, String>::new();
 
+    // TODO this will not work for non manifest files
     let root = Rc::new(RefCell::new(XmlElement {
         element_type: "manifest".to_string(),
         attributes: HashMap::new(),
         children: Vec::new()
     }));
     let mut stack = vec![Rc::clone(&root)];
-    // let mut stack: Vec<Rc<RefCell<XmlElement>>> = Vec::new();
 
     while let Ok(block_type) = ChunkType::parse_block_type(&mut axml_cursor) {
         match block_type {
