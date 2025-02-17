@@ -23,8 +23,14 @@ We provide both a library and a binary crate.
 
 ### Library
 
+Add to your `Cargo.toml`:
+
+```
+rusty-axml = "0.2.0"
+```
+
 The easiest way to get started is to use the `parse_from_apk()` or
-`parse_From_axml()` functions. As the names indicate you can pass an APK or an
+`parse_from_axml()` functions. As the names indicate you can pass an APK or an
 AXML file to get an `Axml` object in return.
 
 See the [documentation on docs.rs](https://docs.rs/rusty-axml/latest/rusty_axml/)
