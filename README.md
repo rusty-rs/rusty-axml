@@ -1,5 +1,9 @@
 # AXMLParser
 
+[![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/rusty-rs/rusty-axml/ci.yml?branch=main&style=for-the-badge)](https://github.com/rusty-rs/rusty-axml/actions/workflows/ci.yml)
+[![Crates.io Version](https://img.shields.io/crates/v/rusty-axml?style=for-the-badge)](https://crates.io/crates/rusty-axml)
+[![docs.rs](https://img.shields.io/docsrs/rusty-axml?style=for-the-badge)](https://docs.rs/rusty-axml/latest/rusty_axml/)
+
 Every APK has a manifest file, which is usually in binary format. This project
 decodes this manifest into human-readable XML.
 
