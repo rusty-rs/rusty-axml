@@ -1,3 +1,5 @@
+//! AXML chunks
+
 pub mod chunk_types;
 pub mod chunk_header;
 pub mod string_pool;
