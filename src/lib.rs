@@ -40,6 +40,39 @@ pub enum ComponentState {
     ExplicitFalse,
 }
 
+/// Read and parse the manifest of an APK
+///
+/// This function will extract the binary AXML from an APK and parse it, returning
+/// an `Axml` object.
+///
+/// # Example
+///
+/// ```
+/// let axml = rusty_axml::parse_from_apk("tests/assets/lumen.apk").unwrap();
+/// assert!(rusty_axml::get_requested_permissions(&axml)
+///                    .contains(&"android.permission.ACCESS_FINE_LOCATION".to_string()));
+/// ```
+pub fn parse_from_apk(file_path: &str) -> Result<Axml, AxmlError> {
+    let cursor = create_cursor_from_apk(file_path)?;
+    parse_from_cursor(cursor)
+}
+
+/// Read and parse an AXML file
+///
+/// This function will read a binary AXML and parse it, returning an `Axml` object.
+///
+/// # Example
+///
+/// ```
+/// let axml = rusty_axml::parse_from_axml("tests/assets/AndroidManifest.xml").unwrap();
+/// assert!(rusty_axml::get_requested_permissions(&axml)
+///                    .contains(&"android.permission.ACCESS_FINE_LOCATION".to_string()));
+/// ```
+pub fn parse_from_axml(file_path: &str) -> Result<Axml, AxmlError> {
+    let cursor = create_cursor_from_axml(file_path)?;
+    parse_from_cursor(cursor)
+}
+
 /// Create cursor of bytes from an APK
 ///
 /// Open an APK, read the contents, and create a `Cursor` of the raw data
