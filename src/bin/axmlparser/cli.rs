@@ -39,9 +39,9 @@ pub struct Target {
    #[arg(short, long)]
    xml: Option<String>,
 
-   /// Path to resources.arsc file
-   #[arg(short, long)]
-   res: Option<String>,
+   // /// Path to resources.arsc file
+   // #[arg(short, long)]
+   // res: Option<String>,
 }
 
 pub fn parse_args() -> Args {
@@ -58,9 +58,9 @@ impl Args {
             return ArgType::Axml;
         }
 
-        if self.target.res.is_some() {
-            return ArgType::Arsc;
-        }
+        // if self.target.res.is_some() {
+        //     return ArgType::Arsc;
+        // }
 
         panic!("Will never happen");
     }
@@ -69,7 +69,7 @@ impl Args {
         match self.get_arg_type() {
             ArgType::Apk  => { self.target.apk.clone().unwrap() },
             ArgType::Axml => { self.target.xml.clone().unwrap() },
-            ArgType::Arsc => { self.target.res.clone().unwrap() },
+            ArgType::Arsc => todo!()
         }
     }
 
