@@ -48,7 +48,7 @@ pub enum ComponentState {
 /// # Example
 ///
 /// ```
-/// let axml = rusty_axml::parse_from_apk("tests/assets/lumen.apk").unwrap();
+/// let axml = rusty_axml::parse_from_apk("tests/assets/app.apk").unwrap();
 /// assert!(rusty_axml::get_requested_permissions(&axml)
 ///                    .contains(&"android.permission.ACCESS_FINE_LOCATION".to_string()));
 /// ```
@@ -84,7 +84,7 @@ pub fn parse_from_axml(file_path: &str) -> Result<Axml, AxmlError> {
 /// # Example
 ///
 /// ```
-/// let cursor = rusty_axml::create_cursor_from_apk("tests/assets/lumen.apk").unwrap();
+/// let cursor = rusty_axml::create_cursor_from_apk("tests/assets/app.apk").unwrap();
 /// let axml = rusty_axml::parse_from_cursor(cursor).unwrap();
 ///
 /// assert!(rusty_axml::get_requested_permissions(&axml)
@@ -193,7 +193,7 @@ where
 /// let cursor = rusty_axml::create_cursor_from_axml("tests/assets/AndroidManifest.xml").unwrap();
 /// let axml = rusty_axml::parse_from_cursor(cursor).unwrap();
 ///
-/// assert_eq!(rusty_axml::find_nodes_by_type(&axml, "activity").len(), 17)
+/// assert_eq!(rusty_axml::find_nodes_by_type(&axml, "activity").len(), 1)
 /// ```
 pub fn find_nodes_by_type(axml: &Axml, element_type: &str) -> Vec<XmlNode> {
     axml.iter()
@@ -209,8 +209,8 @@ pub fn find_nodes_by_type(axml: &Axml, element_type: &str) -> Vec<XmlNode> {
 /// let cursor = rusty_axml::create_cursor_from_axml("tests/assets/AndroidManifest.xml").unwrap();
 /// let axml = rusty_axml::parse_from_cursor(cursor).unwrap();
 ///
-/// let service = rusty_axml::find_node_by_name(&axml, "edu.berkeley.icsi.haystack.services.LocalVpnService").unwrap();
-/// assert_eq!(service.borrow().get_attr("android:permission"), Some("android.permission.BIND_VPN_SERVICE"));
+/// let service = rusty_axml::find_node_by_name(&axml, "androidx.profileinstaller.ProfileInstallReceiver").unwrap();
+/// assert_eq!(service.borrow().get_attr("android:permission"), Some("android.permission.DUMP"));
 /// ```
 pub fn find_node_by_name(axml: &Axml, node_name: &str) -> Option<XmlNode> {
     let name = node_name.to_string();
@@ -235,7 +235,7 @@ pub fn find_node_by_name(axml: &Axml, node_name: &str) -> Option<XmlNode> {
 /// let cursor = rusty_axml::create_cursor_from_axml("tests/assets/AndroidManifest.xml").unwrap();
 /// let axml = rusty_axml::parse_from_cursor(cursor).unwrap();
 ///
-/// let service = rusty_axml::find_node_by_name(&axml, "edu.berkeley.icsi.haystack.services.LocalVpnService").unwrap();
+/// let service = rusty_axml::find_node_by_name(&axml, "eu.jgamba.myapplication.MyFirstService").unwrap();
 /// assert!(rusty_axml::is_component_exposed(&service));
 /// ```
 pub fn is_component_exposed(component: &XmlNode) -> bool {
@@ -294,7 +294,7 @@ pub fn is_component_exposed(component: &XmlNode) -> bool {
 /// let cursor = rusty_axml::create_cursor_from_axml("tests/assets/AndroidManifest.xml").unwrap();
 /// let axml = rusty_axml::parse_from_cursor(cursor).unwrap();
 ///
-/// assert_eq!(rusty_axml::get_activities_names(&axml).len(), 17)
+/// assert_eq!(rusty_axml::get_activities_names(&axml).len(), 1)
 /// ```
 pub fn get_activities_names(parsed_xml: &Axml) -> Vec<String> {
     find_nodes_by_type(parsed_xml, "activity")
@@ -314,7 +314,7 @@ pub fn get_activities_names(parsed_xml: &Axml) -> Vec<String> {
 /// let cursor = rusty_axml::create_cursor_from_axml("tests/assets/AndroidManifest.xml").unwrap();
 /// let axml = rusty_axml::parse_from_cursor(cursor).unwrap();
 ///
-/// assert_eq!(rusty_axml::get_services_names(&axml).len(), 5)
+/// assert_eq!(rusty_axml::get_services_names(&axml).len(), 2)
 /// ```
 pub fn get_services_names(parsed_xml: &Axml) -> Vec<String> {
     find_nodes_by_type(parsed_xml, "service")
@@ -334,7 +334,7 @@ pub fn get_services_names(parsed_xml: &Axml) -> Vec<String> {
 /// let cursor = rusty_axml::create_cursor_from_axml("tests/assets/AndroidManifest.xml").unwrap();
 /// let axml = rusty_axml::parse_from_cursor(cursor).unwrap();
 ///
-/// assert_eq!(rusty_axml::get_providers_names(&axml).len(), 0)
+/// assert_eq!(rusty_axml::get_providers_names(&axml).len(), 2)
 /// ```
 pub fn get_providers_names(parsed_xml: &Axml) -> Vec<String> {
     find_nodes_by_type(parsed_xml, "provider")
@@ -354,7 +354,7 @@ pub fn get_providers_names(parsed_xml: &Axml) -> Vec<String> {
 /// let cursor = rusty_axml::create_cursor_from_axml("tests/assets/AndroidManifest.xml").unwrap();
 /// let axml = rusty_axml::parse_from_cursor(cursor).unwrap();
 ///
-/// assert_eq!(rusty_axml::get_receivers_names(&axml).len(), 5)
+/// assert_eq!(rusty_axml::get_receivers_names(&axml).len(), 2)
 /// ```
 pub fn get_receivers_names(parsed_xml: &Axml) -> Vec<String> {
     find_nodes_by_type(parsed_xml, "receiver")
@@ -374,7 +374,7 @@ pub fn get_receivers_names(parsed_xml: &Axml) -> Vec<String> {
 /// let cursor = rusty_axml::create_cursor_from_axml("tests/assets/AndroidManifest.xml").unwrap();
 /// let axml = rusty_axml::parse_from_cursor(cursor).unwrap();
 ///
-/// assert_eq!(rusty_axml::get_declared_permissions(&axml).len(), 0)
+/// assert_eq!(rusty_axml::get_declared_permissions(&axml).len(), 2)
 /// ```
 pub fn get_declared_permissions(parsed_xml: &Axml) -> Vec<String> {
     find_nodes_by_type(parsed_xml, "permission")
@@ -395,7 +395,7 @@ pub fn get_declared_permissions(parsed_xml: &Axml) -> Vec<String> {
 /// let cursor = rusty_axml::create_cursor_from_axml("tests/assets/AndroidManifest.xml").unwrap();
 /// let axml = rusty_axml::parse_from_cursor(cursor).unwrap();
 ///
-/// assert_eq!(rusty_axml::get_requested_permissions(&axml).len(), 18)
+/// assert_eq!(rusty_axml::get_requested_permissions(&axml).len(), 3)
 /// ```
 pub fn get_requested_permissions(parsed_xml: &Axml) -> Vec<String> {
     find_nodes_by_type(parsed_xml, "uses-permission")
@@ -419,7 +419,7 @@ pub fn get_requested_permissions(parsed_xml: &Axml) -> Vec<String> {
 /// let exposed_components = rusty_axml::get_exposed_components(&axml).unwrap();
 /// assert_eq!(exposed_components.get("activity").unwrap().len(), 1);
 /// assert_eq!(exposed_components.get("service").unwrap().len(), 1);
-/// assert_eq!(exposed_components.get("receiver").unwrap().len(), 4);
+/// assert_eq!(exposed_components.get("receiver").unwrap().len(), 2);
 /// assert_eq!(exposed_components.get("provider").unwrap().len(), 0);
 /// ```
 pub fn get_exposed_components(parsed_xml: &Axml) -> Option<HashMap<String, Vec<XmlNode>>> {

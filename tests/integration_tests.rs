@@ -28,7 +28,7 @@ fn test_manifest_contents(axml: &rusty_axml::parser::Axml) {
 
 #[test]
 fn test_from_apk() {
-    let cursor = rusty_axml::create_cursor_from_apk("tests/assets/lumen.apk").unwrap();
+    let cursor = rusty_axml::create_cursor_from_apk("tests/assets/app.apk").unwrap();
     let axml = rusty_axml::parse_from_cursor(cursor).unwrap();
     test_manifest_contents(&axml);
 }
@@ -45,11 +45,11 @@ fn test_component() {
     let cursor = rusty_axml::create_cursor_from_axml("tests/assets/AndroidManifest.xml").unwrap();
     let axml = rusty_axml::parse_from_cursor(cursor).unwrap();
 
-    let service = rusty_axml::find_node_by_name(&axml, "edu.berkeley.icsi.haystack.services.LocalVpnService").unwrap();
+    let service = rusty_axml::find_node_by_name(&axml, "androidx.profileinstaller.ProfileInstallReceiver").unwrap();
     let service = service.borrow();
 
-    assert_eq!(service.get_attr("android:permission"), Some("android.permission.BIND_VPN_SERVICE"));
-    assert_eq!(service.children().len(), 1);
+    assert_eq!(service.get_attr("android:permission"), Some("android.permission.DUMP"));
+    assert_eq!(service.children().len(), 4);
 
     let filter = service.children().first().unwrap().clone();
     let filter = filter.borrow();
@@ -58,7 +58,7 @@ fn test_component() {
 
     let action = filter.children().first().unwrap().clone();
     let action = action.borrow();
-    assert_eq!(action.get_name(), Some("android.net.VpnService"));
+    assert_eq!(action.get_name(), Some("androidx.profileinstaller.action.INSTALL_PROFILE"));
 }
 
 #[test]
@@ -69,7 +69,11 @@ fn test_manifest_attributes() {
     let node  = rusty_axml::find_nodes_by_type(&axml, "manifest").into_iter().next().unwrap();
     let node = node.borrow();
 
-    assert_eq!(node.get_attr("package"), Some("edu.berkeley.icsi.haystack"));
-    assert_eq!(node.get_attr("android:versionName"), Some("2.2"));
-    assert_eq!(node.get_attr("android:versionCode"), Some("203"));
+    assert_eq!(node.get_attr("package"), Some("eu.jgamba.myapplication"));
+    assert_eq!(node.get_attr("android:versionName"), Some("1.0"));
+    assert_eq!(node.get_attr("android:compileSdkVersion"), Some("35"));
+    assert_eq!(node.get_attr("platformBuildVersionName"), Some("15"));
+    assert_eq!(node.get_attr("android:versionCode"), Some("1"));
+    assert_eq!(node.get_attr("platformBuildVersionCode"), Some("35"));
+    assert_eq!(node.get_attr("android:compileSdkVersionCodename"), Some("15"));
 }
