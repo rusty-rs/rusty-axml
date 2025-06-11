@@ -221,12 +221,12 @@ impl StringPool {
 }
 
 /// Reference to a string in a string pool.
-#[derive(Debug)]
-struct StringPoolRef {
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct ResStringPool_ref {
     /// Index into the string pool table (uint32_t-offset from the indices
     /// immediately after ResStringPool_header) at which to find the location
     /// of the string data in the pool.
-    index: u32,
+    pub index: u32,
 }
 
 /// String pool span

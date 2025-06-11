@@ -1,4 +1,5 @@
 mod consts;
+mod arsc_tests;
 
 fn test_manifest_contents(axml: &rusty_axml::parser::Axml) {
     let mut activities = rusty_axml::get_activities_names(axml);
