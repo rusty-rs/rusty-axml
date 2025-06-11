@@ -33,11 +33,11 @@ pub struct Args {
 pub struct Target {
    /// Path to an APK
    #[arg(short, long)]
-   apk: Option<String>,
+   apk: Option<PathBuf>,
 
    /// Path to an Android binary XML file
    #[arg(short, long)]
-   xml: Option<String>,
+   xml: Option<PathBuf>,
 
    // /// Path to resources.arsc file
    // #[arg(short, long)]
@@ -65,7 +65,7 @@ impl Args {
         panic!("Will never happen");
     }
 
-    pub fn get_arg_path(&self) -> String {
+    pub fn get_arg_path(&self) -> PathBuf {
         match self.get_arg_type() {
             ArgType::Apk  => { self.target.apk.clone().unwrap() },
             ArgType::Axml => { self.target.xml.clone().unwrap() },
