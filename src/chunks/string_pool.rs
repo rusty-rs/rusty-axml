@@ -191,7 +191,7 @@ impl StringPool {
             let current_start = (initial_offset + strings_start + offset) as u64;
             axml_buff.set_position(current_start);
 
-            let string_pool_ref = StringPoolRef {
+            let string_pool_ref = ResStringPoolRef { // Corrected case
                 index: axml_buff.read_u32::<LittleEndian>()?
             };
             let first_char = axml_buff.read_u32::<LittleEndian>()?;
@@ -222,7 +222,7 @@ impl StringPool {
 
 /// Reference to a string in a string pool.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ResStringPool_ref {
+pub struct ResStringPoolRef {  // Renamed to UpperCamelCase
     /// Index into the string pool table (uint32_t-offset from the indices
     /// immediately after ResStringPool_header) at which to find the location
     /// of the string data in the pool.
@@ -240,7 +240,7 @@ struct StringPoolSpan {
     /// This is the name of the XML tag that defined it.
     /// There is a special value END (0xFFFFFFFF) that indicates the
     /// end of an array of spans.
-    name: StringPoolRef,
+    name: ResStringPoolRef, // Updated usage
 
     /// The first of the characters in the string that this span applies to
     first_char: u32,

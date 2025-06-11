@@ -12,6 +12,7 @@ use byteorder::{
 };
 
 /// Representation of a value in a resource, supplying type information.
+#[derive(Debug, PartialEq)]
 pub struct ResValue {
     /// Number of bytes in this structure
     pub size: u16,

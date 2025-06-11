@@ -17,7 +17,7 @@ use crate::{
 };
 
 /// Header that appears at the beginning of every chunk
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Clone, Copy)] // Added PartialEq, Clone, Copy
 pub struct ChunkHeader {
     /// Type identifier for this chunk.
     ///

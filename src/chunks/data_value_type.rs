@@ -8,7 +8,7 @@
 ///
 /// Note: we ignore `TypeFirstInt`, `TypeFirstColorInt`, and `TypeLastColorInt` which hold the same values
 /// as actual data types (respectively `TypeIntDec`, `TypeIntColorArgb8`, and `TypeIntColorRgb4`).
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Clone, Copy)] // Added Clone and Copy as it's a simple enum often used by value
 pub enum DataValueType {
     /// The 'data' is either 0 or 1, specifying this resource is either undefined or empty,
     ///respectively
