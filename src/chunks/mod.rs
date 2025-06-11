@@ -7,3 +7,5 @@ pub mod resource_map;
 pub mod data_value_type;
 pub mod res_value;
 pub mod res_table;
+pub mod common;
+pub mod res_table_entry;
