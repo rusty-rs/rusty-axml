@@ -5,6 +5,7 @@ pub mod errors;
 use std::{
     fs,
     collections::HashMap,
+    path::Path,
 };
 use std::io::{
     Read,
@@ -52,7 +53,7 @@ pub enum ComponentState {
 /// assert!(rusty_axml::get_requested_permissions(&axml)
 ///                    .contains(&"android.permission.ACCESS_FINE_LOCATION".to_string()));
 /// ```
-pub fn parse_from_apk(file_path: &str) -> Result<Axml, AxmlError> {
+pub fn parse_from_apk<P: AsRef<Path>>(file_path: P) -> Result<Axml, AxmlError> {
     let cursor = create_cursor_from_apk(file_path)?;
     parse_from_cursor(cursor)
 }
@@ -68,7 +69,7 @@ pub fn parse_from_apk(file_path: &str) -> Result<Axml, AxmlError> {
 /// assert!(rusty_axml::get_requested_permissions(&axml)
 ///                    .contains(&"android.permission.ACCESS_FINE_LOCATION".to_string()));
 /// ```
-pub fn parse_from_axml(file_path: &str) -> Result<Axml, AxmlError> {
+pub fn parse_from_axml<P: AsRef<Path>>(file_path: P) -> Result<Axml, AxmlError> {
     let cursor = create_cursor_from_axml(file_path)?;
     parse_from_cursor(cursor)
 }
@@ -92,10 +93,10 @@ pub fn parse_from_axml(file_path: &str) -> Result<Axml, AxmlError> {
 /// ```
 ///
 /// [`create_cursor_from_axml`]: fn.create_cursor_from_axml.html
-pub fn create_cursor_from_apk(file_path: &str) -> Result<Cursor<Vec<u8>>, AxmlError> {
+pub fn create_cursor_from_apk<P: AsRef<Path>>(file_path: P) -> Result<Cursor<Vec<u8>>, AxmlError> {
     let mut axml_cursor = Vec::new();
 
-    let zipfile = std::fs::File::open(file_path)?;
+    let zipfile = std::fs::File::open(file_path.as_ref())?;
     let mut archive = zip::ZipArchive::new(zipfile)?;
     let mut raw_file = match archive.by_name("AndroidManifest.xml") {
         Ok(file) => file,
@@ -126,10 +127,10 @@ pub fn create_cursor_from_apk(file_path: &str) -> Result<Cursor<Vec<u8>>, AxmlEr
 /// ```
 ///
 /// [`create_cursor_from_apk`]: fn.create_cursor_from_apk.html
-pub fn create_cursor_from_axml(file_path: &str) -> Result<Cursor<Vec<u8>>, AxmlError> {
+pub fn create_cursor_from_axml<P: AsRef<Path>>(file_path: P) -> Result<Cursor<Vec<u8>>, AxmlError> {
     let mut axml_cursor = Vec::new();
 
-    let mut raw_file = fs::File::open(file_path)?;
+    let mut raw_file = fs::File::open(file_path.as_ref())?;
     raw_file.read_to_end(&mut axml_cursor)?;
 
     Ok(Cursor::new(axml_cursor))
