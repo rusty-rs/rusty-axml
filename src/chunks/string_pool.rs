@@ -129,39 +129,46 @@ impl StringPool {
             let current_start = (initial_offset + strings_start + offset) as u64;
             axml_buff.set_position(current_start);
 
-            let str_size;
+            let char_count: u16; // Renamed from str_size
             let decoded_string;
 
             if is_utf8 {
-                // NOTE for resources.arsc files
-                //
-                // Each String entry contains Length header (2 bytes to 4 bytes) + Actual String + [0x00]
-                // Length header sometime contain duplicate values e.g. 20 20
-                // Actual string sometime contains 00, which need to be ignored
-                // Ending zero might be  2 byte or 4 byte
-                //
-                // TODO: Consider both Length bytes and String length > 32767 characters
-                //
-                // Actually, there are two length if the file is in UTF-8: the encoded and decoded lengths
-                //
+                // Read UTF-8 character count
+                let mut first_byte_char_count = axml_buff.read_u8()? as u16;
+                if (first_byte_char_count & 0x80) != 0 {
+                    first_byte_char_count &= 0x7F; // Mask out the high bit
+                    char_count = (first_byte_char_count << 8) | (axml_buff.read_u8()? as u16);
+                } else {
+                    char_count = first_byte_char_count;
+                }
 
-                let _encoded_size = axml_buff.read_u8()? as u32;
-                str_size = axml_buff.read_u8()? as u32;
-                let mut str_buff = Vec::with_capacity(str_size as usize);
-                let mut chunk = axml_buff.take(str_size.into());
+                // Read UTF-8 byte length
+                let mut first_byte_byte_len = axml_buff.read_u8()? as u16;
+                let byte_len: u16; // Renamed from _encoded_size
+                if (first_byte_byte_len & 0x80) != 0 {
+                    first_byte_byte_len &= 0x7F; // Mask out the high bit
+                    byte_len = (first_byte_byte_len << 8) | (axml_buff.read_u8()? as u16);
+                } else {
+                    byte_len = first_byte_byte_len;
+                }
+
+                // Use byte_len to read the string data
+                let mut str_buff = Vec::with_capacity(byte_len as usize);
+                let mut chunk = axml_buff.take(byte_len as u64);
 
                 chunk.read_to_end(&mut str_buff)?;
-                // decoded_string = String::from_utf8(str_buff)?;
                 decoded_string = String::from_utf8(str_buff)?;
             } else {
-                str_size = axml_buff.read_u16::<LittleEndian>()? as u32;
+                // For UTF-16, the length is u16, representing character count.
+                // Each char is 2 bytes. So byte length is char_count * 2.
+                char_count = axml_buff.read_u16::<LittleEndian>()? as u16;
                 // TODO: can we get rid of this unwrap here?
-                let iter = (0..str_size as usize)
+                let iter = (0..char_count as usize)
                     .map(|_| axml_buff.read_u16::<LittleEndian>().unwrap());
                 decoded_string = std::char::decode_utf16(iter).collect::<Result<String, _>>()?;
             }
 
-            if str_size > 0 {
+            if char_count > 0 {
                 global_strings.push(decoded_string);
             }
         }
@@ -370,5 +377,84 @@ mod tests {
         // Validate that the string pool has correctly decoded the UTF-8 string
         assert_eq!(string_pool.strings.len(), 1);
         assert_eq!(string_pool.strings[0], "Hello");
+    }
+
+    #[test]
+    fn test_long_utf8_string_parsing() {
+        let mut buf = Vec::new();
+        let long_string = "A".repeat(150);
+        let string_char_count = 150u16; // 0x96
+        let string_byte_len = 150u16;   // 0x96
+
+        // Chunk header part of ResStringPool_header
+        let chunk_type_res_string_pool: u16 = 0x0001;
+        // let chunk_header_size_res_string_pool: u16 = 28; // Standard size for ResStringPool_header (ResChunk_header + ResStringPool_header specific fields)
+
+        // String pool specific header fields
+        let string_count_val: u32 = 1;
+        let style_count_val: u32 = 0;
+        let flags_val: u32 = 256; // UTF-8
+
+        // Calculate offsets and sizes
+        // Size of ResStringPool_header specific fields (string_count, style_count, flags, strings_start, styles_start)
+        let res_string_pool_specific_fields_size: u32 = 5 * 4; // 20 bytes
+        let string_offsets_array_size: u32 = string_count_val * 4; // Each offset is u32, 1 string = 4 bytes
+
+        // String entry: char_count_header (2 bytes) + byte_len_header (2 bytes) + string_itself (150 bytes) + null_terminator (1 byte)
+        let single_string_entry_size: u32 = 2 + 2 + string_byte_len as u32 + 1; // 155 bytes
+
+        let styles_start_val: u32 = 0; // No styles, so can be 0. This is an offset from chunk header.
+
+        // ResChunk_header.size: size of this chunk following the ResChunk_header (8 bytes).
+        // It includes: ResStringPool_header specific fields (20B) + string_offsets_array (4B) + string_data (155B)
+        let chunk_data_size_val: u32 = res_string_pool_specific_fields_size + string_offsets_array_size + single_string_entry_size; // 20 + 4 + 155 = 179 bytes
+
+
+        // ResChunk_header (8 bytes total)
+        buf.write_u16::<LittleEndian>(chunk_type_res_string_pool).unwrap(); // ChunkType (2B)
+        buf.write_u16::<LittleEndian>(8).unwrap(); // ResChunk_header.headerSize (2B) - size of this ResChunk_header
+        buf.write_u32::<LittleEndian>(chunk_data_size_val).unwrap();    // ResChunk_header.size (4B) - size of chunk data following this header
+
+        // ResStringPool_header specific fields (20 bytes total)
+        buf.write_u32::<LittleEndian>(string_count_val).unwrap(); // (4B)
+        buf.write_u32::<LittleEndian>(style_count_val).unwrap(); // (4B)
+        buf.write_u32::<LittleEndian>(flags_val).unwrap();       // (4B)
+        // ResStringPool_header.stringsStart: offset from start of ResChunk_header to string data.
+        // String data begins after: ResChunk_header (8B) + ResStringPool_header specific fields (20B) + string_offsets_array (4B)
+        let strings_start_field_val: u32 = 8 + res_string_pool_specific_fields_size + string_offsets_array_size; // 8 + 20 + 4 = 32
+        buf.write_u32::<LittleEndian>(strings_start_field_val).unwrap(); // stringsStart (4B)
+        buf.write_u32::<LittleEndian>(styles_start_val).unwrap();     // stylesStart (4B)
+
+        // String offsets array (4 bytes total for 1 string)
+        // Each entry is an offset from ResStringPool_header.stringsStart to the actual string entry.
+        // Since our string data immediately follows the string_offsets_array, and stringsStart points to the start of string data,
+        // the first string entry is at offset 0 from stringsStart.
+        buf.write_u32::<LittleEndian>(0).unwrap(); // Offset of the first string (relative to strings_start_field_val)
+
+        // String data
+        // Character count (150)
+        buf.write_u8(0x80 | ((string_char_count >> 8) & 0x7F) as u8).unwrap();
+        buf.write_u8((string_char_count & 0xFF) as u8).unwrap();
+
+        // Byte length (150)
+        buf.write_u8(0x80 | ((string_byte_len >> 8) & 0x7F) as u8).unwrap();
+        buf.write_u8((string_byte_len & 0xFF) as u8).unwrap();
+
+        buf.write_all(long_string.as_bytes()).unwrap();
+        buf.write_u8(0x00).unwrap();                    // Null terminator
+
+        let mut buffer = Cursor::new(buf);
+
+        // The `from_buff` function assumes we have read the chunk type already
+        buffer.read_u16::<LittleEndian>().unwrap(); // Consume chunk type
+
+        let mut global_strings = Vec::new();
+        let string_pool = StringPool::from_buff(&mut buffer, &mut global_strings).unwrap();
+
+        assert_eq!(string_pool.strings.len(), 1);
+        assert_eq!(string_pool.strings[0], long_string);
+        assert_eq!(string_pool.strings[0].len(), 150);
+        assert_eq!(string_pool.string_count, 1);
+        assert!(string_pool.is_utf8);
     }
 }
