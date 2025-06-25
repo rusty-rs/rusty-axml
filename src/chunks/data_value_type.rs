@@ -4,6 +4,11 @@
 //!
 //! Possible data type values in Dalvik and a helper method to parse a data type from an `u8`.
 
+use std::fmt::{
+    Formatter,
+    LowerHex
+};
+
 /// Data value types
 ///
 /// Note: we ignore `TypeFirstInt`, `TypeFirstColorInt`, and `TypeLastColorInt` which hold the same values
@@ -74,6 +79,29 @@ impl DataValueType {
             0x1e => DataValueType::TypeIntColorArgb4,
             0x1f => DataValueType::TypeIntColorRgb4,
             _ => panic!("Error: unknown data value type {:02X}", value)
+        }
+    }
+}
+
+impl LowerHex for DataValueType {
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
+        match self {
+            DataValueType::TypeNull             => LowerHex::fmt(&0x00, f),
+            DataValueType::TypeReference        => LowerHex::fmt(&0x01, f),
+            DataValueType::TypeAttribute        => LowerHex::fmt(&0x02, f),
+            DataValueType::TypeString           => LowerHex::fmt(&0x03, f),
+            DataValueType::TypeFloat            => LowerHex::fmt(&0x04, f),
+            DataValueType::TypeDimension        => LowerHex::fmt(&0x05, f),
+            DataValueType::TypeFraction         => LowerHex::fmt(&0x06, f),
+            DataValueType::TypeDynamicReference => LowerHex::fmt(&0x07, f),
+            DataValueType::TypeDynamicAttribute => LowerHex::fmt(&0x08, f),
+            DataValueType::TypeIntDec           => LowerHex::fmt(&0x10, f),
+            DataValueType::TypeIntHex           => LowerHex::fmt(&0x11, f),
+            DataValueType::TypeIntBoolean       => LowerHex::fmt(&0x12, f),
+            DataValueType::TypeIntColorArgb8    => LowerHex::fmt(&0x1c, f),
+            DataValueType::TypeIntColorRgb8     => LowerHex::fmt(&0x1d, f),
+            DataValueType::TypeIntColorArgb4    => LowerHex::fmt(&0x1e, f),
+            DataValueType::TypeIntColorRgb4     => LowerHex::fmt(&0x1f, f),
         }
     }
 }

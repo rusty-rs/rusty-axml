@@ -287,22 +287,28 @@ pub fn parse_start_element(axml_buff: &mut Cursor<Vec<u8>>,
             decoded_attr_val.push_str(&strings.get(attr_raw_val as usize).ok_or(AxmlError::StringPoolError)?.to_string());
         } else {
             match data_value_type.data_type {
-                DataValueType::TypeNull => println!("TODO: DataValueType::TypeNull"),
-                DataValueType::TypeReference => {
-                    decoded_attr_val.push_str("type1/");
-                    decoded_attr_val.push_str(&data_value_type.data.to_string());
+                DataValueType::TypeNull => {
+                    decoded_attr_val.push_str("(null)");
                 },
-                DataValueType::TypeAttribute => println!("TODO: DataValueType::TypeAttribute"),
-                DataValueType::TypeString => println!("TODO: DataValueType::TypeString"),
-                DataValueType::TypeFloat => println!("TODO: DataValueType::TypeFloat"),
-                DataValueType::TypeDimension => println!("TODO: DataValueType::TypeDimension"),
-                DataValueType::TypeFraction => println!("TODO: DataValueType::TypeFraction"),
-                DataValueType::TypeDynamicReference => println!("TODO: DataValueType::TypeDynamicReference"),
-                DataValueType::TypeDynamicAttribute => println!("TODO: DataValueType::TypeDynamicAttribute"),
-                DataValueType::TypeIntDec => decoded_attr_val.push_str(&data_value_type.data.to_string()),
-                DataValueType::TypeIntHex => {
+                DataValueType::TypeReference => {
                     decoded_attr_val.push_str("0x");
                     decoded_attr_val.push_str(&format!("{:x}", &data_value_type.data).to_string());
+                },
+                DataValueType::TypeAttribute => {
+                    decoded_attr_val.push_str("0x");
+                    decoded_attr_val.push_str(&format!("{:x}", &data_value_type.data).to_string());
+                },
+                DataValueType::TypeString => println!("TODO: DataValueType::TypeString"),
+                DataValueType::TypeFloat
+                    | DataValueType::TypeDimension
+                    | DataValueType::TypeFraction
+                    | DataValueType::TypeDynamicReference
+                    | DataValueType::TypeDynamicAttribute
+                    | DataValueType::TypeIntDec
+                    | DataValueType::TypeIntHex => {
+                        // TODO
+                        decoded_attr_val.push_str(&format!("(type 0x{:x}) ", data_value_type.data_type).to_string());
+                        decoded_attr_val.push_str(&format!("0x{:x}", &data_value_type.data).to_string());
                 },
                 DataValueType::TypeIntBoolean => {
                     if data_value_type.data == 0 {
