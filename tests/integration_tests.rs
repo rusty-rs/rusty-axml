@@ -70,11 +70,13 @@ fn test_manifest_attributes() {
     let node  = rusty_axml::find_nodes_by_type(&axml, "manifest").into_iter().next().unwrap();
     let node = node.borrow();
 
+    println!("{node:#?}");
+
     assert_eq!(node.get_attr("package"), Some("eu.jgamba.myapplication"));
     assert_eq!(node.get_attr("android:versionName"), Some("1.0"));
-    assert_eq!(node.get_attr("android:compileSdkVersion"), Some("35"));
-    assert_eq!(node.get_attr("platformBuildVersionName"), Some("15"));
-    assert_eq!(node.get_attr("android:versionCode"), Some("1"));
-    assert_eq!(node.get_attr("platformBuildVersionCode"), Some("35"));
+    assert_eq!(node.get_attr("android:compileSdkVersion"), Some("(type 0x10) 0x23"));
+    assert_eq!(node.get_attr("platformBuildVersionName"), Some("(type 0x10) 0xf"));
+    assert_eq!(node.get_attr("android:versionCode"), Some("(type 0x10) 0x1"));
+    assert_eq!(node.get_attr("platformBuildVersionCode"), Some("(type 0x10) 0x23"));
     assert_eq!(node.get_attr("android:compileSdkVersionCodename"), Some("15"));
 }
