@@ -78,7 +78,7 @@ impl DataValueType {
             0x1d => DataValueType::TypeIntColorRgb8,
             0x1e => DataValueType::TypeIntColorArgb4,
             0x1f => DataValueType::TypeIntColorRgb4,
-            _ => panic!("Error: unknown data value type {:02X}", value)
+            _ => panic!("Error: unknown data value type {value:02X}")
         }
     }
 }

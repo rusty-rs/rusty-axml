@@ -59,7 +59,7 @@ impl ResTable {
                 ChunkType::ResTablePackageType => {
                     ResTablePackage::parse(axml_buff)?;
                 },
-                _ => { panic!("######## Unexpected block type: {:02X}", block_type); }
+                _ => { panic!("######## Unexpected block type: {block_type:02X}"); }
             };
         }
 
@@ -123,9 +123,9 @@ impl ResTablePackage {
         let id = axml_buff.read_u32::<LittleEndian>()?;
 
         let mut name: [u16; 128] = [0; 128];
-        for i in 0..128 {
-            name[i] = axml_buff.read_u16::<LittleEndian>()?;
-            if name[i] == 0x00 {
+        for item in &mut name {
+            *item = axml_buff.read_u16::<LittleEndian>()?;
+            if *item == 0x00 {
                 break;
             }
         }

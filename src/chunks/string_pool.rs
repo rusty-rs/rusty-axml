@@ -135,24 +135,25 @@ impl StringPool {
             if is_utf8 {
                 // Read UTF-8 character count (spec calls this "UTF-16 length")
                 // This is the number of characters, not bytes.
-                let _utf8_char_count: u16; // Mark as unused for now, but read it as per spec.
                 let mut first_byte_char_count = axml_buff.read_u8()? as u16;
-                if (first_byte_char_count & 0x80) != 0 {
+
+                // Mark as unused for now, but read it as per spec.
+                let _utf8_char_count = if (first_byte_char_count & 0x80) != 0 {
                     first_byte_char_count &= 0x7F; // Mask out the high bit
-                    _utf8_char_count = (first_byte_char_count << 8) | (axml_buff.read_u8()? as u16);
+                    (first_byte_char_count << 8) | (axml_buff.read_u8()? as u16)
                 } else {
-                    _utf8_char_count = first_byte_char_count;
-                }
+                    first_byte_char_count
+                };
 
                 // Read UTF-8 byte length (spec calls this "UTF-8 length")
                 let mut first_byte_byte_len = axml_buff.read_u8()? as u16;
-                let byte_len: u16; // Renamed from _encoded_size
-                if (first_byte_byte_len & 0x80) != 0 {
+                // Renamed from _encoded_size
+                let byte_len: u16 = if (first_byte_byte_len & 0x80) != 0 {
                     first_byte_byte_len &= 0x7F; // Mask out the high bit
-                    byte_len = (first_byte_byte_len << 8) | (axml_buff.read_u8()? as u16);
+                    (first_byte_byte_len << 8) | (axml_buff.read_u8()? as u16)
                 } else {
-                    byte_len = first_byte_byte_len;
-                }
+                    first_byte_byte_len
+                };
 
                 // Use byte_len to read the string data
                 let mut str_buff = Vec::with_capacity(byte_len as usize);
@@ -164,20 +165,19 @@ impl StringPool {
                                       // TODO: According to AOSP comments for resources.arsc, UTF-8 strings might have 2 or 4 byte terminators.
                                       // This needs verification if parsing resources.arsc strings yields errors or incorrect cursor positions.
             } else { // UTF-16
-                let char_count = axml_buff.read_u16::<LittleEndian>()? as u16; // UTF-16 length in characters
-                let actual_decoded_string: String;
-                if char_count > 0 {
+                let char_count = axml_buff.read_u16::<LittleEndian>()?; // UTF-16 length in characters
+                let actual_decoded_string = if char_count > 0 {
                     let mut str_chars = Vec::with_capacity(char_count as usize);
                     for _ in 0..char_count {
                         // It's possible for a read error here if char_count is erroneously large.
                         // Consider adding error handling or further validation if issues arise.
                         str_chars.push(axml_buff.read_u16::<LittleEndian>()?);
                     }
-                    actual_decoded_string = std::char::decode_utf16(str_chars.into_iter())
-                                         .collect::<Result<String, _>>()?;
+                    std::char::decode_utf16(str_chars.into_iter())
+                                         .collect::<Result<String, _>>()?
                 } else {
-                    actual_decoded_string = String::new();
-                }
+                    String::new()
+                };
                 axml_buff.read_u16::<LittleEndian>()?; // Consume UTF-16 null terminator (0x0000)
                 decoded_string = actual_decoded_string;
             }
