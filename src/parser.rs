@@ -66,7 +66,7 @@ impl XmlElement {
             element.write_empty().unwrap();
         } else {
             element
-                .write_inner_content(|writer| -> Result<(), quick_xml::Error> {
+                .write_inner_content(|writer| -> Result<(), Error> {
                     for child in self.children.iter() {
                         child.as_ref().borrow().write_element(writer).unwrap();
                     }

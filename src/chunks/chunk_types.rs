@@ -74,7 +74,7 @@ impl ChunkType {
             0x0203 => ChunkType::ResTableLibraryType,
 
             /* If we find an unknown type, we stop and panic */
-            _ => panic!("Error: unknown block type {:02X}", raw_block_type)
+            _ => panic!("Error: unknown block type {raw_block_type:02X}")
         };
 
         Ok(block_type)

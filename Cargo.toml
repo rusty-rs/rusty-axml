@@ -2,7 +2,7 @@
 name = "rusty-axml"
 version = "0.2.0"
 authors = ["Julien Gamba <julien@jgamba.eu>"]
-edition = "2021"
+edition = "2024"
 license = "Apache-2.0"
 description = "A parser for Android AXML files"
 homepage = "https://github.com/rusty-rs/rusty-axml"
@@ -21,8 +21,8 @@ required-features = ["cli"]
 cli = ["dep:clap"]
 
 [dependencies]
-byteorder = "1.4.3"
-clap = { version = "4.5.4", features = ["derive"], optional = true }
-quick-xml = "0.31.0"
-thiserror = "2.0.11"
-zip = "0.5"
+byteorder = "1.5.0"
+clap = { version= "4.5.41", features = ["derive"], optional = true }
+quick-xml = "0.38.0"
+thiserror = "2.0.12"
+zip = { version = "4.3.0", default-features=false, features=["deflate"] }
